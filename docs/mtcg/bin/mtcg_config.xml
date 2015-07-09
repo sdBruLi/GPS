@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="GBK"?>
+<root>
+	<threadGroup>
+        <thread id="com.china317.mtcg.moc.gateway.f2veh.CommServer" isRun="true" listenPort="11099" />
+        <thread id="com.china317.mtcg.moc.gateway.f2center.UpServer" isRun="true" listenPort="10082" />
+        <thread id="com.china317.mtcg.moc.gateway.cpu.CenterMachine">
+        	<isAuthAutoResponser>true</isAuthAutoResponser>
+		</thread>
+				
+
+
+	
+
+	
+
+
+		
+
+
+	</threadGroup>
+	
+</root>

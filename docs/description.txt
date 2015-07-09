@@ -1,0 +1,20 @@
+1. UAT目录/home/gps/emmpgateway/
+2. PROD目录/home/gps/
+3. 网关的日志都记录到了/home/gps/emmpgateway/logs/gateway.log文件中。
+
+DEBUG MODE：
+-c cd /u02/emmggateway/emmpgateway/bin && 
+java -server -Xss256k -Xmx1024M -Xms512m -XX:MaxPermSize=128m -server
+-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8788 -XX:-UseGCOverheadLimit -XX:+UseConcMarkSweepGC
+-classpath .:../lib/core-1.2beta.jar:../lib/emmp-1.2beta.jar:../lib/dom4j-1.5-rc1.jar:../lib/mina-core-2.0.4.jar:../lib/slf4j-api-1.6.1.jar:../lib/slf4j-log4j12-1.6.1.jar:../lib/commons-logging-1.0.4.jar:../lib/log4j-1.2.16.jar
+com.test.myFilter
+
+RUN MODE:
+cd /u02/emmggateway/emmpgateway/bin && 
+java -server -Xss256k -Xmx1024M -Xms512m -XX:MaxPermSize=128m -XX:-UseGCOverheadLimit -XX:+UseConcMarkSweepGC  
+-classpath ".:../lib/core-1.2beta.jar:../lib/emmp-1.2beta.jar:../lib/dom4j-1.5-rc1.jar:../lib/mina-core-2.0.4.jar:../lib/slf4j-api-1.6.1.jar:../lib/slf4j-log4j12-1.6.1.jar:../lib/commons-logging-1.0.4.jar:../lib/log4j-1.2.16.jar"
+com.china317.emmp.jtt808Gateway.server.GatewayStart > /dev/null 2>&1 &
+
+
+
+
