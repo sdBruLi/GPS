@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="GBK"?>
+<root>
+    <threadGroup>
+        <thread id="com.china317.emmp.jtt808Gateway.server.transport.VehServer" isRun="true" listenPort="21361" />
+        <thread id="com.china317.emmp.jtt808Gateway.server.transport.VehUdpServer" isRun="true" listenPort="31361" />
+        <thread id="com.china317.emmp.jtt808Gateway.server.transport.GatewayServer" isRun="true" listenPort="5399" />
+        <thread id="com.china317.emmp.jtt808Gateway.server.processor.CommonProcessor">
+            <processorName>JT/T808--2011</processorName>
+            <sessionAuthorizationStatus></sessionAuthorizationStatus><!-- Unauthorized_Session,Authorized_Session,Both_Session -->
+            <acceptCommands>0x0001, 0x0002, 0x0003,0x0100,0x0102,0x0104,0x0200,0x0201,0x0301,0x0302,0x0303,0x0500,0x0700,0x0701,0x0702,0x0800,0x0801,0x0802,0x0900,0x0901,0x0a00</acceptCommands>
+        </thread>
+        <thread id="com.china317.emmp.jtt808Gateway.server.transport.SessionTimeoutManager" isRun="true">
+            <openSessionTimeout>30</openSessionTimeout><!-- 单位：秒 -->
+            <lastDataTimeout>1000</lastDataTimeout><!-- 单位：秒 -->
+        </thread>
+    </threadGroup>
+</root>

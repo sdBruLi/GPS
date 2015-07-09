@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="GBK"?>
+<root>
+    <emmpgateway disable = "false">
+        <gatewayClient-list>
+            <gatewayClient name = "两客一危" ip="127.0.0.1" port ="5399" disable = "false"/>
+        </gatewayClient-list>
+        <processor-list>
+            <processor name = "vpuProcessor" class = "com.tanway.start.VpuProcessor"  disable = "false">
+                <sessionAuthorizationStatus>2</sessionAuthorizationStatus>
+                <acceptCommands>0x0200</acceptCommands>
+                <parameters></parameters>
+            </processor>
+        </processor-list>
+        <parameters></parameters>
+    </emmpgateway>
+</root>
