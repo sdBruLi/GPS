@@ -14,6 +14,6 @@ fi
 echo startting server....
  
 #mv ../logs/vehout.txt ../logs/vehout.txt.bak
-su - gps -c "cd /home/gps/emmggateway/emmpgateway/bin && java -server -Xss256k -Xmx1024M -Xms512m -XX:MaxPermSize=128m -XX:-UseGCOverheadLimit -XX:+UseConcMarkSweepGC  -classpath ".:../lib/core-1.2beta.jar:../lib/emmp-1.2beta.jar:../lib/dom4j-1.5-rc1.jar:../lib/mina-core-2.0.4.jar:../lib/slf4j-api-1.6.1.jar:../lib/slf4j-log4j12-1.6.1.jar:../lib/commons-logging-1.0.4.jar:../lib/log4j-1.2.16.jar"  com.china317.emmp.jtt808Gateway.server.GatewayStart > /dev/null 2>&1 &" 
+su - gps -c "cd /home/gps/emmggateway/bin && java -server -Xss256k -Xmx1024M -Xms512m -XX:MaxPermSize=128m -XX:-UseGCOverheadLimit -XX:+UseConcMarkSweepGC  -classpath ".:../lib/core-1.2beta.jar:../lib/emmp-1.2beta.jar:../lib/dom4j-1.5-rc1.jar:../lib/mina-core-2.0.4.jar:../lib/slf4j-api-1.6.1.jar:../lib/slf4j-log4j12-1.6.1.jar:../lib/commons-logging-1.0.4.jar:../lib/log4j-1.2.16.jar"  com.china317.emmp.jtt808Gateway.server.GatewayStart > /dev/null 2>&1 &" 
 
 echo server started.
