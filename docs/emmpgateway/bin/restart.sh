@@ -1,6 +1,6 @@
-#!/bin/sh 
+#!/bin/sh
 id=`ps -ef|grep GatewayStart|grep -v grep|awk {'print $2'}`
-if test -n "$id" 
+if test -n "$id"
 then
   echo "kill GatewayStart id=$id process success"
   kill -9 $id
