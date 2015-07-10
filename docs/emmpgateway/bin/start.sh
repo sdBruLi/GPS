@@ -1,4 +1,6 @@
 #!/bin/sh
+cd /home/gps/emmpgateway/bin
+
 id=`ps -ef|grep GatewayStart|grep -v grep|awk {'print $2'}`
 if test -n "$id"
 then
