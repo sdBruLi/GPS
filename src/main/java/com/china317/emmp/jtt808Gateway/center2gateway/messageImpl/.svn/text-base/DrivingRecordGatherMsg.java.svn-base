@@ -1,0 +1,63 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8700;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:行驶记录数据采集
+ */
+public class DrivingRecordGatherMsg extends BaseDownMessage {
+	/** 驾驶员代码和机动车驾驶证号码 */
+	public static final byte	Record_Driver_Code_License			= 0x01; // 驾驶员代码和机动车驾驶证号码
+	/** 实时时钟 */
+	public static final byte	Record_Realtime_Clock				= 0x02; // 实时时钟
+	/** 360小时累计行驶里程 */
+	public static final byte	Record_360h_Total_Mileage			= 0x03; // 360小时累计行驶里程
+	/** 车辆特征系数 */
+	public static final byte	Record_CharacteristicCoefficients	= 0x04; // 车辆特征系数
+	/** 360小时内行驶速度数据 */
+	public static final byte	Record_360h_Speed					= 0x05; // 360小时内行驶速度数据
+	/** 车辆VIN、车牌号、车辆分类 */
+	public static final byte	Record_Vin_license_classification	= 0x06; // 车辆VIN、车牌号、车辆分类
+	/** 事故疑点数据 */
+	public static final byte	Record_Accident_Doubtful			= 0x07; // 事故疑点数据
+	/** 2个日历天内累计行驶里程 */
+	public static final byte	Record_2d_Total_Mileage				= 0x08; // 2个日历天内累计行驶里程
+	/** 2个日历天内行驶速度数据 */
+	public static final byte	Record_2d_Speed						= 0x09; // 2个日历天内行驶速度数据
+	/** 2个日历天内同一驾驶员连续驾驶超过3h的记录 */
+	public static final byte	Record_2d_Driving_over3h_record		= 0x11; // 2个日历天内同一驾驶员连续驾驶超过3h的记录
+
+	private byte				commandRecord;								// 标志
+
+	public DrivingRecordGatherMsg(String mobileNum, String messageKey, byte commandRecord) {
+		this.setCommand(MessageCommands.Server_Driving_Record_Gather);
+		this.setCommandRecord(commandRecord);
+		this.setMessageKey(messageKey);
+		this.setMobileNum(mobileNum);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_driver_record_gather);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8700 body = new JT808MsgBody_0x8700();
+		body.setCommand(this.getCommandRecord());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getCommandRecord() {
+		return commandRecord;
+	}
+
+	/**数据类型*/
+	public void setCommandRecord(byte commandRecord) {
+		this.commandRecord = commandRecord;
+	}
+
+}

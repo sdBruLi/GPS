@@ -1,0 +1,41 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+
+public class RouteAttri {
+	
+	public static final byte		TIME_ON					= 1;	// 根据时间
+	public static final byte		TIME_OFF				= 0;	// 不根据时间
+	public static final byte		IN_ROUTE2DRIVER_ON		= 1;	// 进路线报警给驾驶员
+	public static final byte		IN_ROUTE2DRIVER_OFF	= 0;	// 进路线不报警给驾驶员
+	public static final byte		IN_ROUTE2PLATFORM_ON	= 1;	// 进路线报警给平台
+	public static final byte		IN_ROUTE2PLATFORM_OFF	= 0;	// 进路线不报警给平台
+	public static final byte		OUT_REGION2DRIVER_ON	= 1;	// 出路线报警给驾驶员
+	public static final byte		OUT_REGION2DRIVER_OFF	= 0;	// 出路线不报警给驾驶员
+	public static final byte		OUT_REGION2PLATFORM_ON	= 1;	// 出路线报警给平台
+	public static final byte		OUT_REGION2PLATFORM_OFF	= 0;	// 出路线不报警给平台
+	//
+	private short							attribute;				// 区域的区域属性
+	
+	private byte time;
+	private byte inRoute2Driver;
+	private byte inRoute2Platform;
+	private byte outRoute2Driver;
+	private byte outRoute2Platform;
+	
+	
+	public RouteAttri(byte time, byte inRoute2Driver, byte inRoute2Platform, 
+			byte outRoute2Driver, byte outRoute2Platform) {
+		this.time = time;
+		this.inRoute2Driver = inRoute2Driver;
+		this.inRoute2Driver = inRoute2Platform;
+		this.outRoute2Driver = outRoute2Driver;
+		this.outRoute2Platform = outRoute2Platform;
+	}
+	
+	public short getAttribute() {
+		attribute = (short) (time | (inRoute2Driver << 2) | (inRoute2Platform << 3) | 
+				(outRoute2Driver << 4) | (outRoute2Platform << 5));
+		return attribute;
+	}
+
+}

@@ -1,0 +1,229 @@
+package com.china317.emmp.jtt808Gateway.distribute.client;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.transport.socket.nio.NioSocketConnector;
+
+import com.china317.core.codec.jtt808_2011.JT808CodecFactory;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.emmp.jtt808Gateway.Constants;
+
+/**
+ * @date: 2013-3-18
+ * @author: Greg
+ * @description:转发客户端，自带信息缓存，识别准转数据，阻塞弃包
+ */
+public class DistributeClient {
+	private final static Log						log			= LogFactory.getLog(DistributeClient.class);
+
+	private NioSocketConnector						connector;
+	private IoSession								session;
+	private int										remotePort	= 1581;
+	private String									remoteIp	= "127.0.0.1";
+	private String									clinetName	= "D1";
+	private DistributeHandler						handler;
+	private boolean									isRun		= false;
+	private Thread									sendThread;
+	private List<Integer>							acceptMsgId;												// Integer.valueOf("0100", 16)
+	private List<Integer>							distributeMsgId;
+	private List<String>							distributeCars;												// simids
+	private ConcurrentLinkedQueue<UnitPackJT808>	distributeQueue;
+	private InetSocketAddress						address;
+
+	public DistributeClient() {
+	}
+
+	public void init() {
+		// config = Config.getThreadConfig(TransparentClient.class);
+		// remotePort = config.getRemotePort();
+		// remoteIp = config.getRemoteIP();
+		if (isRun) {
+			distributeQueue = new ConcurrentLinkedQueue<UnitPackJT808>();
+
+			
+
+			if (handler == null) {
+				handler = new DistributeHandler();
+				handler.setClient(this);
+			}
+			// TransparentCommonProcessor commonProcessor = new
+			// TransparentCommonProcessor(
+			// "JT/T808--2011");
+			// String[] acceptCommands = commonProcessor.getConfig()
+			// .getAcceptCommands();// 目前没有判断，可以添加到配置文件中自动加载
+			// vehHandler.registerProcessor(commonProcessor.getConfig()
+			// .getProcessorName(), commonProcessor,
+			// SessionAuthorizationStatus.Both_Session, acceptCommands);
+
+			// new Thread(new Runnable() {
+			// @Override
+			// public void run() {
+			startup();
+			// }
+			// }).start();
+		}
+	}
+
+	public void startup() {
+		try {
+			
+			connector = new NioSocketConnector();
+			connector.setConnectTimeoutMillis(30000);
+			connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new JT808CodecFactory()));
+			connector.setHandler(handler);
+
+			ConnectFuture future = connector.connect(address);
+			future.awaitUninterruptibly();
+			if(future.isDone()){
+				if(!future.isConnected()){
+					connector.dispose();
+					log.error("未在时限内建立连接");
+					return ;
+				}
+			}
+			session = future.getSession();
+
+			log.info("try to connect " + address);
+
+			if (sendThread == null) {
+				sendThread = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						long outmemorytime = 0;
+						while (true) {
+							try {
+								Thread.sleep(10);
+								write(distributeQueue.poll());
+								// 避免长时间阻塞，弃包
+								if (outmemorytime == 0 && distributeMsgId.size() > Constants.OUTOFMEMORY / 2) {
+									outmemorytime = System.currentTimeMillis();
+								}
+								if (outmemorytime != 0) {
+									if (distributeMsgId.size() >= Constants.OUTOFMEMORY) {
+										log.info("drop message!");
+										distributeQueue.clear();
+										outmemorytime = 0;
+									} else {
+										if (System.currentTimeMillis() - outmemorytime > 300000) {
+											log.info("drop message!");
+											distributeQueue.clear();
+											outmemorytime = 0;
+										}
+									}
+								}
+							} catch (Exception e) {
+								rebuildSession();
+							}
+						}
+					}
+				});
+				sendThread.start();
+			}
+		} catch (Exception e) {
+			rebuildSession();
+		}
+	}
+
+	public void rebuildSession() {
+		try {
+			if (session != null) {
+				session.close(false);
+			}
+			session = null;
+			log.error("session error or closed");
+			Thread.sleep(10000);
+			startup();
+		} catch (Exception e) {
+		}
+	}
+
+	public boolean write(UnitPackJT808 message) {
+		if (null == session || null == message) {
+			return false;
+		} else {
+			// 信息来源车辆允许转出
+			if (distributeCars.contains(message.getMobileNum())) {
+				// 信息类型允许转出
+				if (distributeMsgId.contains(message.getMsgID())) {
+					session.write(message);
+					log.info("write to distributeserver");
+				}
+				// }else{
+				// log.info("unleagle car or msg");
+			}
+			return true;
+		}
+	}
+
+	public void add2Queue(UnitPackJT808 pack) {
+		if (isRun) {
+			distributeQueue.offer(pack);
+			log.info("add to " + clinetName);
+		}
+	}
+
+	public IoSession getSession() {
+		return session;
+	}
+
+	public int getRemotePort() {
+		return remotePort;
+	}
+
+	public String getRemoteIp() {
+		return remoteIp;
+	}
+
+	public void setRemoteIp(String remoteIp, int remotePort) {
+		this.remoteIp = remoteIp;
+		this.remotePort = remotePort;
+		address = new InetSocketAddress(remoteIp, remotePort);
+	}
+
+	public String getClinetName() {
+		return clinetName;
+	}
+
+	public void setClinetName(String clinetName) {
+		this.clinetName = clinetName;
+	}
+
+	public boolean isRun() {
+		return isRun;
+	}
+
+	public void setRun(boolean isRun) {
+		this.isRun = isRun;
+	}
+
+	public List<Integer> getAcceptMsgId() {
+		return acceptMsgId;
+	}
+
+	public void setAcceptMsgId(List<Integer> acceptMsgId) {
+		this.acceptMsgId = acceptMsgId;
+	}
+
+	public List<Integer> getDistributeMsgId() {
+		return distributeMsgId;
+	}
+
+	public void setDistributeMsgId(List<Integer> distributeMsgId) {
+		this.distributeMsgId = distributeMsgId;
+	}
+
+	public List<String> getDistributeCars() {
+		return distributeCars;
+	}
+
+	public void setDistributeCars(List<String> distributeCars) {
+		this.distributeCars = distributeCars;
+	}
+}

@@ -1,0 +1,30 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.text.DecimalFormat;
+
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+public class PhotoObj extends MultimediaData {
+	public static final byte				STATE_INIT					= 0;										//初始
+	public static final byte				STATE_SUCCESS				= 1; 										//成功
+	public static final byte				STATE_FAILED				= 2;										//失败
+	public static final byte				STATE_IN_PROGRESS			= 3;										//进行中
+	
+	
+	public PhotoObj() {
+		super.setCreateTime(System.currentTimeMillis());
+	}
+	
+	@Override
+	public String getCommand() {
+		return MessageCommands.client_Multimedia;
+	}
+
+	public float currentPercent() {
+		double currentSize = this.getPacketsSize();//当前数
+		double count = this.getPacketCount();//总数
+		DecimalFormat format = new  DecimalFormat("#0.00");
+		return Float.parseFloat(format.format(currentSize / count));
+	}
+
+}

@@ -1,0 +1,50 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+public class MultiDataSearchItem {
+	
+	private int					multimediaID;
+	private byte				multimediaType;
+	private byte				channelID;											// 通道ID
+	private byte				eventItemCoding;									// 0:平台下方指令;1:定时动作;2:抢劫报警触发;3:碰撞侧翻报警触发;其他保留
+	private PositionMessage	 	gpsData;
+	
+	public byte getChannelID() {
+		return channelID;
+	}
+
+	public void setChannelID(byte channelID) {
+		this.channelID = channelID;
+	}
+
+	public int getMultimediaID() {
+		return multimediaID;
+	}
+
+	public void setMultimediaID(int multimediaID) {
+		this.multimediaID = multimediaID;
+	}
+
+	public byte getMultimediaType() {
+		return multimediaType;
+	}
+
+	public void setMultimediaType(byte multimediaType) {
+		this.multimediaType = multimediaType;
+	}
+
+	public byte getEventItemCoding() {
+		return eventItemCoding;
+	}
+
+	public void setEventItemCoding(byte eventItemCoding) {
+		this.eventItemCoding = eventItemCoding;
+	}
+
+	public PositionMessage getGpsData() {
+		return gpsData;
+	}
+
+	public void setGpsData(PositionMessage gpsData) {
+		this.gpsData = gpsData;
+	}
+}

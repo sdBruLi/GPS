@@ -1,0 +1,135 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import java.net.InetSocketAddress;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.session.IdleStatus;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+
+import com.china317.core.codec.jtt808_2011.JT808CodecFactory;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.distributor.SessionAuthorizationStatus;
+import com.china317.core.distributor.SessionAuthorizedListenerManager;
+import com.china317.core.distributor.SessionClosedListenerManager;
+import com.china317.core.distributor.SessionOpenedListenerManager;
+import com.china317.core.processor.AbstractProcessor;
+import com.china317.emmp.jtt808Gateway.server.common.config.Config;
+import com.china317.emmp.jtt808Gateway.server.common.config.ThreadConfig;
+import com.china317.emmp.jtt808Gateway.server.processor.CommonProcessor;
+
+public class VehServer extends Thread {
+	private final static Log	log			= LogFactory.getLog(VehServer.class);
+	private int					port		= 1581;
+	private int					bufferSize	= 4096;
+	private int					idelTime	= 10;
+	private NioSocketAcceptor	acceptor;
+	private VehHandler			vehHandler;
+	private static ThreadConfig	config		= null;
+	private boolean				running		= false;
+
+	private VehServer() {
+		config = Config.getThreadConfig(VehServer.class);
+		port = config.getListenPort();
+		setName(" face to vehicle server");
+		if (config.isRun()) {
+			log.info("start vehicle server");
+			startup();
+		}
+	}
+
+	private static class SingletonHolder {
+		private final static VehServer	INSTANCE	= new VehServer();
+	}
+
+	public static VehServer getInstance() {
+		return SingletonHolder.INSTANCE;
+	}
+
+	public void startup() {
+		if (!running) {
+			this.start();
+			this.running = true;
+		}
+	}
+
+	public static void startThread() {
+		getInstance();
+	}
+
+	@Override
+	public void run() {
+
+		SessionOpenedListenerManager.getInstance().register("VehSessionOpened", new VehSessionOpenedListener("VehSessionOpened"));
+		SessionClosedListenerManager.getInstance().register("VehSessionClosed", new VehSessionClosedListener("VehSessionClosed"));
+		SessionAuthorizedListenerManager.getInstance().register("VehSessionAuthorized", new VehSessionAuthorizedListener("VehSessionAuthorized"));
+
+		vehHandler = new VehHandler();
+
+		CommonProcessor commonProcessor = new CommonProcessor("JT/T808--2011");
+		String[] acceptCommands = commonProcessor.getConfig().getAcceptCommands();// 目前没有判断，可以添加到配置文件中自动加载
+		vehHandler.registerProcessor(commonProcessor.getConfig().getProcessorName(), commonProcessor, SessionAuthorizationStatus.Authorized_Session,
+				acceptCommands);
+
+		while (true) {
+			try {
+				acceptor = new NioSocketAcceptor();
+				acceptor.getSessionConfig().setReadBufferSize(this.bufferSize);
+				acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, this.idelTime);
+				acceptor.setReuseAddress(true);
+				acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new JT808CodecFactory()));
+				acceptor.setHandler(vehHandler);
+				acceptor.bind(new InetSocketAddress(this.port));
+				log.info("listen to:" + this.port + " success");
+				return;
+			} catch (Exception e) {
+				log.error("listen to:" + this.port + " fail", e);
+				try {
+					sleep(10000);
+				} catch (Exception e2) {
+				}
+			}
+		}
+	}
+
+	public void registerProcessor(String processorName, AbstractProcessor processor, SessionAuthorizationStatus sessionAuthorizationStatus,
+			String[] acceptCommands) {
+		vehHandler.registerProcessor(processorName, processor, sessionAuthorizationStatus, acceptCommands);
+	}
+
+	public static boolean write(long sessionId, UnitPackJT808 pack, boolean isClose) {
+		if (getInstance() == null) {
+			logerror("instance is null", sessionId, pack);
+		} else if (getInstance().acceptor == null) {
+			logerror("instance.acceptor is null", sessionId, pack);
+		} else {
+			IoSession session = getSession(sessionId);
+			if (session == null) {
+				logerror("session is null", sessionId, pack);
+			} else if (!session.isConnected()) {
+				logerror("session is closed", sessionId, pack);
+			} else {
+				session.write(pack);
+				if (isClose) {
+					session.close(false);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public NioSocketAcceptor getAcceptor() {
+		return acceptor;
+	}
+
+	public static IoSession getSession(long sessionId) {
+		return getInstance().vehHandler.getSessionManager().getSession(sessionId);
+	}
+
+	private static void logerror(String str, long sessionId, UnitPackJT808 pack) {
+		log.error("sessionId=" + sessionId + ",MobileNum=" + pack.getMobileNum() + " " + str);
+	}
+}

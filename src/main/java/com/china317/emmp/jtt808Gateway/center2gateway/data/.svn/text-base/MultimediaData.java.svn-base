@@ -1,0 +1,108 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200;
+import com.china317.emmp.jtt808Gateway.center2gateway.codecExt.ObjectDataJT808;
+
+
+public abstract class MultimediaData extends ObjectDataJT808{
+	public static final byte				Multimedia_TYPE_IMAGE				= 1;										//图像
+	public static final byte				Multimedia_TYPE_AUDIO				= 2;										//音频
+	public static final byte				Multimedia_TYPE_VIDEO				= 3;										//视频
+	public static final byte				Multimedia_TYPE_ACCIDENTPOINT		= 10;										//事故疑点
+	public static final byte				Multimedia_TYPE_JT808PACK			= 11;										//808协议包封装项
+	
+	public static final short				SHOT_COMMAND_STOP				= 0;										// 拍摄命令---停止拍摄
+	public static final short				SHOT_COMMAND_VIDEO				= (short) 0xFFFF;							// 拍摄命令---录像
+	public static final byte				SAVE_SIGN_SAVE					= 1;										// 保存标志---保存
+	public static final byte				SAVE_SIGN_UPLOAD				= 0;										// 保存标志---实时上传
+	public static final byte				RESOLUTION_320_240				= 1;										// 分辨率     ---320*240
+	public static final byte				RESOLUTION_640_480				= 2;										// 分辨率     ---640*480
+	public static final byte				RESOLUTION_800_600				= 3;										// 分辨率     ---800*600
+	public static final byte				RESOLUTION_1024_768				= 4;										// 分辨率     ---1024*768
+	public static final byte				RESOLUTION_QCIF_176_144			= 5;										// 分辨率     ---176*144[QCIF]
+	public static final byte				RESOLUTION_CIF_352_288			= 6;										// 分辨率     ---352*288[CIF]
+	public static final byte				RESOLUTION_HALF_D1_704_288		= 7;										// 分辨率     ---704*288[HALF D1]
+	public static final byte				RESOLUTION_D1_704_576			= 8;										// 分辨率     ---704*576[D1]
+	
+//	private short							businessType;																//业务类型
+	private long							createTime;
+	private int								multimediaID;																//多媒体ID
+	private byte							multimediaType;																//多媒体类型 0：图像；1：音频；2：视频
+	private byte							multimediaFormatCoding;														// 0:JPEG;1:TIF;2:MP3;3:WAV;4:WMV；5其他
+	private byte							eventItemCoding;															// 0:平台下方指令;1:定时动作;2:抢劫报警触发;3:碰撞侧翻报警触发;其他保留
+
+	private JT808MsgBody_0x0200				gpsData							= new JT808MsgBody_0x0200();
+	private int 							state							= 0;										//0:初始;1:成功;2:失败3:进行中	
+	private String 							vehDesc;
+	private byte							channelID;
+	
+	public int getState() {
+		return state;
+	}
+	public void setState(int state) {
+		this.state = state;
+	}
+	public String getVehDesc() {
+		return vehDesc;
+	}
+	public void setVehDesc(String vehDesc) {
+		this.vehDesc = vehDesc;
+	}
+	public byte getChannelID() {
+		return channelID;
+	}
+	public void setChannelID(byte channelID) {
+		this.channelID = channelID;
+	}
+	public byte getMultimediaFormatCoding() {
+		return multimediaFormatCoding;
+	}
+	public void setMultimediaFormatCoding(byte multimediaFormatCoding) {
+		this.multimediaFormatCoding = multimediaFormatCoding;
+	}
+	public byte getEventItemCoding() {
+		return eventItemCoding;
+	}
+	public void setEventItemCoding(byte eventItemCoding) {
+		this.eventItemCoding = eventItemCoding;
+	}
+	public int getMultimediaID() {
+		return multimediaID;
+	}
+
+	public void setMultimediaID(int multimediaID) {
+		this.multimediaID = multimediaID;
+	}
+
+	@Override
+	public long getCreateTime() {
+		return createTime;
+	}
+
+	@Override
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
+	}
+
+	public JT808MsgBody_0x0200 getGpsData() {
+		return gpsData;
+	}
+
+	public void setGpsData(JT808MsgBody_0x0200 gpsData) {
+		this.gpsData = gpsData;
+	}
+//	public short getBusinessType() {
+//		return businessType;
+//	}
+//
+//	public void setBusinessType(short businessType) {
+//		this.businessType = businessType;
+//	}
+	public byte getMultimediaType() {
+		return multimediaType;
+	}
+	public void setMultimediaType(byte multimediaType) {
+		this.multimediaType = multimediaType;
+	}
+	
+}

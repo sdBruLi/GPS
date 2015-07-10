@@ -1,0 +1,101 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8301;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8301_item;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:事件设置下发
+ */
+public class EventSettingMessage extends BaseDownMessage {
+	/**删除终端所有事件*/
+	public static final byte							SETTING_DELETE				= 0;	// 删除终端所有事件
+	/**更新事件*/
+	public static final byte							SETTING_UPDATE				= 1;	// 更新事件
+	/**追加事件*/
+	public static final byte							SETTING_ADD					= 2;	// 追加事件
+	/**修改事件*/
+	public static final byte 							SETTING_MODIFY				= 3;	// 修改事件
+	/**删除特定几项事件*/
+	public static final byte 							SETTING_DEL_ITEMS			= 4;	// 删除特定几项事件
+	//
+	private byte										settingType;						// 设置类型
+	private byte										count;								// 设置总数
+	private List<EventItem>								eventItems;							// 事件项列表
+	
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey
+	 * @param settingType 设置类型
+	 * @param eventItems 事件项列表
+	 * 生成事件设置协议封装对象
+	 */
+	 
+	public EventSettingMessage(String mobileNum, String messageKey, byte settingType, 
+			List<EventItem>	eventItems) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setSettingType(settingType);
+		this.setEventItems(eventItems);
+		this.setCommand(MessageCommands.Server_Event_Setting);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_event_setting);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8301 body = new JT808MsgBody_0x8301();
+		body.setSettingType(settingType);
+		List<JT808MsgBody_0x8301_item>	eventList = null;
+		if (eventItems != null) {
+			body.setCount((byte) eventItems.size());
+			for (EventItem i : eventItems) {
+				if (eventList == null) {
+					eventList = new ArrayList<JT808MsgBody_0x8301_item>();
+				}
+				JT808MsgBody_0x8301_item item = new JT808MsgBody_0x8301_item();
+				item.setEventId(i.getEventId());
+				item.setEventContent(i.getEventContent());
+				item.setEventContentLen((byte) i.getEventContent().getBytes("GBK").length);
+				eventList.add(item);
+			}
+			body.setEventItems(eventList);
+		}
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getSettingType() {
+		return settingType;
+	}
+
+	/**设置类型*/
+	public void setSettingType(byte settingType) {
+		this.settingType = settingType;
+	}
+
+	public byte getCount() {
+		return count;
+	}
+
+	/**事件数*/
+	public void setCount(byte count) {
+		this.count = count;
+	}
+
+	public List<EventItem> getEventItems() {
+		return eventItems;
+	}
+
+	/**各事件*/
+	public void setEventItems(List<EventItem> eventItems) {
+		this.eventItems = eventItems;
+	}
+
+}

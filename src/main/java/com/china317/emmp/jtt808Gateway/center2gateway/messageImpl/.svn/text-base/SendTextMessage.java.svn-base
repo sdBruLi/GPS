@@ -1,0 +1,81 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8300;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:下发文本信息
+ */
+public class SendTextMessage extends BaseDownMessage {
+	
+	public static final byte	MSG_TYPE_URGENT				= 1;	// 紧急信息
+	public static final byte	MSG_TYPE_COMMON				= 0;	// 普通信息
+	
+	public static final byte	TERMINAL_MONITOR_ON		= 1;	// 终端显示器显示
+	public static final byte 	TERMINAL_MONITOR_OFF	= 0;	// 终端显示器不显示
+	
+	public static final byte 	TTS_ON					= 1;	// 终端TTS播读
+	public static final byte	TTS_OFF					= 0;	// 终端TTS不播读
+	
+	public static final byte 	ADV_PANEL_ON			= 1;	//广告屏显示
+	public static final byte	ADV_PANEL_OFF			= 0;	//广告屏不显示
+	//
+	private byte				sign;							// 标志
+	private String				textMessage;					// 文本信息
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey 消息唯一key
+	 * @param info 文本信息
+	 * @param msgType 信息紧急情况
+	 * @param terminalMonitor 是否终端显示器显示
+	 * @param tts 是否终端TTS播读
+	 * @param advPanel 是否广告屏显示
+	 */
+	public SendTextMessage(String mobileNum, String messageKey, String info, byte msgType, 
+			byte terminalMonitor, byte tts, byte advPanel) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setTextMessage(info);
+		this.setSign(getSign(msgType, terminalMonitor, tts, advPanel));
+		this.setCommand(MessageCommands.Server_Send_Text_Message);
+	}
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_send_text);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8300 body = new JT808MsgBody_0x8300();
+		body.setSign(this.getSign());
+		body.setTextMessage(this.getTextMessage());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	private static byte getSign(byte msgType, byte terminalMonitor, byte tts, byte advPanel) {
+		byte sign = 0;
+		sign = (byte) (msgType | (terminalMonitor << 2) | (tts << 3) | (advPanel << 4));
+		return sign;
+	}
+	
+	public byte getSign() {
+		return sign;
+	}
+
+	/**紧急标识*/
+	public void setSign(byte sign) {
+		this.sign = sign;
+	}
+
+	public String getTextMessage() {
+		return textMessage;
+	}
+
+	/**文本内容*/
+	public void setTextMessage(String textMessage) {
+		this.textMessage = textMessage;
+	}
+
+}

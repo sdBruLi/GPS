@@ -1,0 +1,66 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8701;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:行驶记录仪参数下发
+ */
+public class SettingRunRecordMessage extends BaseDownMessage {
+
+	private byte		cmd;		// 命令字
+	private IoBuffer	dataBlock;	// 数据块
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param command
+	 *            命令字，见GB/T19056
+	 * @param dataBlock
+	 *            数据块 生成行驶记录参数下传命令协议封装对象
+	 * @param messageKey
+	 */
+	public SettingRunRecordMessage(String mobileNum, String messageKey, byte cmd, IoBuffer dataBuf) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setCmd(cmd);
+		this.setDataBlock(dataBuf);
+		this.setCommand(MessageCommands.Server_Setting_RunRecord);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_driver_record_param_down);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8701 body = new JT808MsgBody_0x8701();
+		body.setCommand(this.getCmd());
+		body.setDataBlock(this.getDataBlock());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getCmd() {
+		return cmd;
+	}
+
+	/** 命令字 */
+	public void setCmd(byte cmd) {
+		this.cmd = cmd;
+	}
+
+	public IoBuffer getDataBlock() {
+		return dataBlock;
+	}
+
+	/** 数据块 */
+	public void setDataBlock(IoBuffer dataBlock) {
+		this.dataBlock = dataBlock;
+	}
+
+}

@@ -1,0 +1,53 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+public class RegionItemAttri {
+	
+	public static final byte		TIME_ON					= 1;	// 根据时间
+	public static final byte		TIME_OFF				= 0;	// 不根据时间
+	public static final byte		SPEED_RESTRICTED_ON		= 1;	// 限速
+	public static final byte		SPEED_RESTRICTED_OFF	= 0;	// 不限速
+	public static final byte		IN_REGION2DRIVER_ON		= 1;	// 进区域报警给驾驶员
+	public static final byte		IN_REGION2DRIVER_OFF	= 0;	// 进区域不报警给驾驶员
+	public static final byte		IN_REGION2PLATFORM_ON	= 1;	// 进区域报警给平台
+	public static final byte		IN_REGION2PLATFORM_OFF	= 0;	// 进区域不报警给平台
+	public static final byte		OUT_REGION2DRIVER_ON	= 1;	// 出区域报警给驾驶员
+	public static final byte		OUT_REGION2DRIVER_OFF	= 0;	// 出区域不报警给驾驶员
+	public static final byte		OUT_REGION2PLATFORM_ON	= 1;	// 出区域报警给平台
+	public static final byte		OUT_REGION2PLATFORM_OFF	= 0;	// 出区域不报警给平台
+	public static final byte		LATITUDE_NORTHERN		= 0;	// 北纬
+	public static final byte		LATITUDE_SOUTHERN		= 1;	// 南纬
+	public static final byte		LONGITUDE_EAST			= 0;	// 东经
+	public static final byte		LONGITUDE_WEST			= 1;	// 西经
+	//
+	private short							attribute;				// 区域的区域属性
+
+	private byte time;
+	private byte speedRestricted;
+	private byte inRegion2Driver;
+	private byte inRegion2Platform;
+	private byte outRegion2Driver;
+	private byte outRegion2Platform;
+	private byte latitude;
+	private byte longitude;
+	
+	public RegionItemAttri(byte time, byte speedRestricted, byte inRegion2Driver,
+			byte inRegion2Platform, byte outRegion2Driver, byte outRegion2Platform,
+			byte latitude, byte longitude) {
+		this.time = time;
+		this.speedRestricted = speedRestricted;
+		this.inRegion2Driver = inRegion2Driver;
+		this.inRegion2Platform = inRegion2Platform;
+		this.outRegion2Driver = outRegion2Driver;
+		this.outRegion2Platform = outRegion2Platform;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+	
+	public short getAttribute() {
+		attribute = (short) (time | (speedRestricted << 1) | (inRegion2Driver << 2) | 
+				(inRegion2Platform << 3) | (outRegion2Driver << 4) | 
+				(outRegion2Platform << 5) | (latitude << 6) | (longitude << 6));
+		return attribute;
+	}
+
+}

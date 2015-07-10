@@ -1,0 +1,85 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.io.UnsupportedEncodingException;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8304;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:信息服务
+ */
+public class InfoServiceMessage extends BaseDownMessage {
+	
+	private byte				infoType;						// 信息类型
+	private short				infoLen;						// 信息长度
+	private String				infoContent;					// 信息内容
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey
+	 * @param infoType 信息类型
+	 * @param infoLen 信息长度
+	 * @param infoContent 信息内容
+	 * 生成信息服务协议封装包
+	 */
+	public InfoServiceMessage(String mobileNum, String messageKey, byte infoType, 
+			String infoContent) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setInfoType(infoType);
+		if (infoContent != null) {
+			try {
+				this.setInfoLen((short) infoContent.getBytes("GBK").length);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			this.setInfoContent(infoContent);
+		}
+		this.setCommand(MessageCommands.Server_Info_Service);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_info_service);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8304 body = new JT808MsgBody_0x8304();
+		body.setInfoType(this.getInfoType());
+		body.setInfoLen(this.getInfoLen());
+		body.setInfoContent(this.getInfoContent());
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+
+	public byte getInfoType() {
+		return infoType;
+	}
+
+	/**信息类型*/
+	public void setInfoType(byte infoType) {
+		this.infoType = infoType;
+	}
+
+	public short getInfoLen() {
+		return infoLen;
+	}
+
+	/**消息长度*/
+	public void setInfoLen(short infoLen) {
+		this.infoLen = infoLen;
+	}
+
+	public String getInfoContent() {
+		return infoContent;
+	}
+
+	/**信息内容*/
+	public void setInfoContent(String infoContent) {
+		this.infoContent = infoContent;
+	}
+
+}

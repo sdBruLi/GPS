@@ -1,0 +1,34 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+
+public class EventItem {
+	
+	private int				eventId;						// 事件ID
+	private String				eventContent;					// 事件内容
+
+	public EventItem() {
+	}
+
+	public EventItem(byte eventId, String eventContent) {
+		this.eventId = eventId;
+		this.eventContent = eventContent;
+//		this.eventContentLen = (byte) eventContent.getBytes("GBK").length;
+	}
+	public int getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(int eventId) {
+		this.eventId = eventId;
+	}
+
+	public String getEventContent() {
+		return eventContent;
+	}
+
+	public void setEventContent(String eventContent) {
+		this.eventContent = eventContent;
+//		this.eventContentLen = (byte) eventContent.getBytes("GBK").length;
+	}
+
+}

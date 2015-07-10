@@ -1,0 +1,32 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+
+public class QuestionAnswer {
+	
+	private byte				answerId;							// ´ð°¸ID
+	private String				answerContent;						// ´ð°¸ÄÚÈÝ
+
+	public QuestionAnswer() {
+	}
+
+	public QuestionAnswer(byte answerId, String answerContent) {
+		this.answerContent = answerContent;
+		this.answerId = answerId;
+	}
+	public byte getAnswerId() {
+		return answerId;
+	}
+
+	public void setAnswerId(byte answerId) {
+		this.answerId = answerId;
+	}
+
+	public String getAnswerContent() {
+		return answerContent;
+	}
+
+	public void setAnswerContent(String answerContent) {
+		this.answerContent = answerContent;
+	}
+
+}

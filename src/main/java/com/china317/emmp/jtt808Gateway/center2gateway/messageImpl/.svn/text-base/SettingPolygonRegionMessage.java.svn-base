@@ -1,0 +1,167 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8604;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8604_peak_item;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:设置多边形区域
+ */
+public class SettingPolygonRegionMessage extends BaseDownMessage {
+
+	private int						regionId;			// 区域ID
+	private RegionItemAttri			regionAttribute;	// 区域属性
+	private String					startTime	= "";	// 起始时间
+	private String					stopTime	= "";	// 结束时间
+	private short					maxSpeed;			// 最大速度
+	private byte					overspeedTime;		// 超速持续时间
+	private short					regionPeakCount;	// 区域总顶点数
+	private List<PolygonPeakItem>	peakList;			// 顶点项列表
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param regionId
+	 *            区域ID
+	 * @param regionAttribute
+	 *            区域属性
+	 * @param startTime
+	 *            起始时间
+	 * @param stopTime
+	 *            结束时间
+	 * @param maxSpeed
+	 *            最高速度
+	 * @param overspeedTime
+	 *            超速持续时间
+	 * @param peakList
+	 *            区域顶点列表
+	 * @return UnitPackJT808
+	 * @throws Exception
+	 *             生成设置多边形区域协议封装包
+	 */
+	public SettingPolygonRegionMessage(String mobileNum, String messageKey, int regionId, RegionItemAttri regionAttribute, String startTime,
+			String stopTime, short maxSpeed, byte overspeedTime, List<PolygonPeakItem> peakList) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setRegionId(regionId);
+		this.setRegionAttribute(regionAttribute);
+		this.setStartTime(startTime);
+		this.setStopTime(stopTime);
+		this.setMaxSpeed(maxSpeed);
+		this.setOverspeedTime(overspeedTime);
+		this.setPeakList(peakList);
+		this.setCommand(MessageCommands.Server_Setting_Polygon_Region);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_setting_polygon_region);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8604 body = new JT808MsgBody_0x8604();
+		body.setRegionId(this.getRegionId());
+		body.setRegionAttribute(this.getRegionAttribute().getAttribute());
+		if (((this.getRegionAttribute().getAttribute()) & 0x01) == 1) {
+			body.setStartTime(startTime);
+			body.setStopTime(stopTime);
+		}
+		if (((this.getRegionAttribute().getAttribute() >> 1) & 0x01) == 1) {
+			body.setMaxSpeed(maxSpeed);
+			body.setOverspeedTime(overspeedTime);
+		}
+
+		if (peakList != null) {
+			List<JT808MsgBody_0x8604_peak_item> peakLists = new ArrayList<JT808MsgBody_0x8604_peak_item>();
+			for (PolygonPeakItem item : peakList) {
+				JT808MsgBody_0x8604_peak_item i = new JT808MsgBody_0x8604_peak_item();
+				i.setPeakLatitude(item.getPeakLatitude());
+				i.setPeakLongitude(item.getPeakLongitude());
+				peakLists.add(i);
+			}
+			body.setRegionPeakCount((short) peakLists.size());
+			body.setPeakList(peakLists);
+		}
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public int getRegionId() {
+		return regionId;
+	}
+
+	/** 区域id */
+	public void setRegionId(int regionId) {
+		this.regionId = regionId;
+	}
+
+	public RegionItemAttri getRegionAttribute() {
+		return regionAttribute;
+	}
+
+	/** 区域属性 */
+	public void setRegionAttribute(RegionItemAttri regionAttribute) {
+		this.regionAttribute = regionAttribute;
+	}
+
+	public String getStartTime() {
+		return startTime;
+	}
+
+	/** 开始时间 */
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+
+	public String getStopTime() {
+		return stopTime;
+	}
+
+	/** 结束时间 */
+	public void setStopTime(String stopTime) {
+		this.stopTime = stopTime;
+	}
+
+	public short getMaxSpeed() {
+		return maxSpeed;
+	}
+
+	/** 最大限速 */
+	public void setMaxSpeed(short maxSpeed) {
+		this.maxSpeed = maxSpeed;
+	}
+
+	public byte getOverspeedTime() {
+		return overspeedTime;
+	}
+
+	/** 超速持续时长 */
+	public void setOverspeedTime(byte overspeedTime) {
+		this.overspeedTime = overspeedTime;
+	}
+
+	public short getRegionPeakCount() {
+		return regionPeakCount;
+	}
+
+	/** 顶点数 */
+	public void setRegionPeakCount(short regionPeakCount) {
+		this.regionPeakCount = regionPeakCount;
+	}
+
+	public List<PolygonPeakItem> getPeakList() {
+		return peakList;
+	}
+
+	/** 顶点列 */
+	public void setPeakList(List<PolygonPeakItem> peakList) {
+		this.peakList = peakList;
+	}
+
+}

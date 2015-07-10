@@ -1,0 +1,24 @@
+package com.china317.emmp.jtt808Gateway.server.Container;
+
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.mina.core.session.IoSession;
+
+/**
+ * @date: 2013-3-18
+ * @author: Greg
+ * @description:缓存所有连接上的车辆session
+ */
+public class VehSessionContainer {
+
+	/** <phoneNum,IoSession> */
+	private static ConcurrentHashMap<String, IoSession> vehSessions = new ConcurrentHashMap<String, IoSession>();
+	
+	public static void addVeh2container(String phoneNum, IoSession session) {
+		vehSessions.put(phoneNum, session);
+	}
+	
+	public static IoSession getVehSessionBy(String phoneNum){
+		return vehSessions.get(phoneNum);
+	}
+}

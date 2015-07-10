@@ -1,0 +1,33 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.codecExt;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+public class ObjectDataPacket {
+	private long					createTime;
+	private int id;
+	private byte[] bytes;
+	public ObjectDataPacket() {
+		this.createTime = System.currentTimeMillis();
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public byte[] getBuffer() {
+		return bytes;
+	}
+	public void setBuffer(IoBuffer buf) {
+		bytes = new byte[buf.limit()];
+		buf.get(bytes);
+	}
+	public long getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
+	}
+	
+}

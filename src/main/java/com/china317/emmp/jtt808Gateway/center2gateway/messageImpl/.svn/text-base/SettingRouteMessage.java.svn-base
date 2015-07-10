@@ -1,0 +1,141 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8606;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8606_inflexion_item;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:设置路线
+ */
+public class SettingRouteMessage extends BaseDownMessage {
+
+	private int							routeId;				// 区域ID
+	private RouteAttri					routeAttribute;		// 区域属性
+	private String						startTime	= "";		// 起始时间
+	private String						stopTime	= "";		// 结束时间
+	private short						routeInflexionCount;	// 区域总顶点数
+	private List<RouteInflexionItem>	inflexionList;			// 顶点项列表
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param routeId
+	 *            路线ID
+	 * @param routeAttribute
+	 *            路线属性
+	 * @param startTime
+	 *            起始时间
+	 * @param stopTime
+	 *            结束时间
+	 * @param inflexionList
+	 *            区域顶点列表
+	 * @return UnitPackJT808 生成设置路线协议封装包
+	 */
+	public SettingRouteMessage(String mobileNum, String messageKey, int routeId, RouteAttri routeAttribute, String startTime, String stopTime,
+			List<RouteInflexionItem> inflexionList) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setRouteId(routeId);
+		this.setRouteAttribute(routeAttribute);
+		this.setStartTime(startTime);
+		this.setStopTime(stopTime);
+		this.setInflexionList(inflexionList);
+		this.setCommand(MessageCommands.Server_Setting_Road);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_setting_route);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8606 body = new JT808MsgBody_0x8606();
+		body.setRouteId(this.getRouteId());
+		body.setRouteAttribute(this.getRouteAttribute().getAttribute());
+		body.setStartTime(this.getStartTime());
+		body.setStopTime(this.getStopTime());
+		if (this.inflexionList != null) {
+			List<JT808MsgBody_0x8606_inflexion_item> inflexionLists = new ArrayList<JT808MsgBody_0x8606_inflexion_item>();
+			for (RouteInflexionItem item : this.inflexionList) {
+				JT808MsgBody_0x8606_inflexion_item i = new JT808MsgBody_0x8606_inflexion_item();
+				i.setInflexionId(item.getInflexionId());
+				i.setInflexionLatitude(item.getInflexionLatitude());
+				i.setInflexionLongitude(item.getInflexionLongitude());
+				i.setMaxSpeed(item.getMaxSpeed());
+				i.setOverspeedTime(item.getOverspeedTime());
+				i.setRoadAttribute(item.getRoadAttribute().getAttribute());
+				i.setRoadId(item.getRoadId());
+				i.setRoadRunOverlength(item.getRoadRunOverlength());
+				i.setRoadRunShortness(item.getRoadRunShortness());
+				i.setRoadWide(item.getRoadWide());
+
+				inflexionLists.add(i);
+			}
+			body.setRouteInflexionCount((short) inflexionLists.size());
+			body.setInflexionList(inflexionLists);
+		}
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public int getRouteId() {
+		return routeId;
+	}
+
+	/** 路线Id */
+	public void setRouteId(int routeId) {
+		this.routeId = routeId;
+	}
+
+	public RouteAttri getRouteAttribute() {
+		return routeAttribute;
+	}
+
+	/** 区域属性 */
+	public void setRouteAttribute(RouteAttri routeAttribute) {
+		this.routeAttribute = routeAttribute;
+	}
+
+	public String getStartTime() {
+		return startTime;
+	}
+
+	/** 起始时间 */
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+
+	public String getStopTime() {
+		return stopTime;
+	}
+
+	/** 结束时间 */
+	public void setStopTime(String stopTime) {
+		this.stopTime = stopTime;
+	}
+
+	public short getRouteInflexionCount() {
+		return routeInflexionCount;
+	}
+
+	/** 路线顶点数 */
+	public void setRouteInflexionCount(short routeInflexionCount) {
+		this.routeInflexionCount = routeInflexionCount;
+	}
+
+	public List<RouteInflexionItem> getInflexionList() {
+		return inflexionList;
+	}
+
+	/** 顶点列 */
+	public void setInflexionList(List<RouteInflexionItem> inflexionList) {
+		this.inflexionList = inflexionList;
+	}
+
+}

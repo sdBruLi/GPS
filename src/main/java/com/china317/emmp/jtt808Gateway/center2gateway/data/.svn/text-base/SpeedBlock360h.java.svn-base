@@ -1,0 +1,35 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.util.ByteUtil;
+
+public class SpeedBlock360h {
+	private String time;
+	private List<Short> speedBlocks;
+	public String getTime() {
+		return time;
+	}
+	public void setTime(String time) {
+		this.time = time;
+	}
+	public List<Short> getSpeedBlocks() {
+		return speedBlocks;
+	}
+	public void setSpeedBlocks(List<Short> speedBlocks) {
+		this.speedBlocks = speedBlocks;
+	}
+	
+	public void parse(byte[] datas) {
+		byte[] timebytes = new byte[6];
+		System.arraycopy(datas, 0, timebytes, 0, 5);
+		time = ByteUtil.getHexString(timebytes);
+		for (int i = 5; i < datas.length; i++) {
+			if (speedBlocks == null) {
+				speedBlocks = new ArrayList<Short>();
+			}
+			speedBlocks.add((short) (datas[i] & 0xFF));
+		}
+	}
+}

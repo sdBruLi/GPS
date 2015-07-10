@@ -1,0 +1,20 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.common;
+
+import java.lang.reflect.Constructor;
+
+public class CreateObjectInstance {
+	private static CreateObjectInstance instance = new CreateObjectInstance();
+	private CreateObjectInstance(){
+	}
+	public static CreateObjectInstance getInstance() {
+		return instance;
+	}
+	
+	public Object createObjectInstance(String className) throws Exception {
+		Object o = null;
+		Class c = Class.forName(className);
+		Constructor constructor = c.getConstructor();
+		o = constructor.newInstance(null);
+		return o;
+	}
+}

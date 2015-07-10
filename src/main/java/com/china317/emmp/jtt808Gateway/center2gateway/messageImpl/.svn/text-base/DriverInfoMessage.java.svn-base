@@ -1,0 +1,75 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0702;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45 
+ * @author: Greg
+ * @description:司机信息
+ */
+public class DriverInfoMessage extends BaseUpMessage {
+	private static final Log log = LogFactory.getLog(DriverInfoMessage.class);
+	private String		driverName;							// 驾驶员姓名
+	private String		driveridentityCode;					// 驾驶员身份证编码
+	private String		certificateCode;					// 从业资格证编码
+	private String	    servicesOfficeName;					// 发证机构名称
+
+	public DriverInfoMessage() {
+		this.setCommand(MessageCommands.Client_Driver_Info);
+	}
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		this.unpackHeadPart(pack);
+		try {
+			JT808MsgBody_0x0702 body = (JT808MsgBody_0x0702)pack.getMsgBody();
+			this.setDriverName(body.getDriverName());
+			this.setDriveridentityCode(body.getDriveridentityCode());
+			this.setCertificateCode(body.getCertificateCode());
+			this.setServicesOfficeName(body.getServicesOfficeName());
+		} catch (Exception e) {
+			log.error("",e);
+		}
+	}
+
+	public String getDriverName() {
+		return driverName;
+	}
+
+	/**司机名*/
+	public void setDriverName(String driverName) {
+		this.driverName = driverName;
+	}
+
+	public String getDriveridentityCode() {
+		return driveridentityCode;
+	}
+
+	/**司机身份证*/
+	public void setDriveridentityCode(String driveridentityCode) {
+		this.driveridentityCode = driveridentityCode;
+	}
+
+	public String getCertificateCode() {
+		return certificateCode;
+	}
+
+	/**司机从业资格证*/
+	public void setCertificateCode(String certificateCode) {
+		this.certificateCode = certificateCode;
+	}
+
+	public String getServicesOfficeName() {
+		return servicesOfficeName;
+	}
+
+	/**发证机构*/
+	public void setServicesOfficeName(String servicesOfficeName) {
+		this.servicesOfficeName = servicesOfficeName;
+	}
+
+}

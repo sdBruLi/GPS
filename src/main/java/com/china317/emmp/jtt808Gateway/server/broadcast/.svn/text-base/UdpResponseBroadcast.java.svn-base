@@ -1,0 +1,228 @@
+package com.china317.emmp.jtt808Gateway.server.broadcast;
+
+import java.util.*;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.service.IoAcceptor;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.base.AbstractDataPacket;
+
+/**
+ * 具有重试机制的广播，独立的线程方式实现。
+ * 可通过方法addSessions动态加入广播目的地址(sessionId)。
+  * 通过responseMessageReceived方法来响应目的地址已经收到数据。
+ * 成功发送的目的地址将进入successed队列，重试次数超过maxRetryCount的目的地址将进入failed队列
+ * 当没有活动的sessionId时（active队列为空），广播线程将结束。
+ * @author Jarvis.mao
+ * @version 1.0
+ */
+public abstract class UdpResponseBroadcast {
+	private static final Log log = LogFactory.getLog(UdpResponseBroadcast.class);
+	
+	/** 最大重试次数*/
+	private int maxRetryCount;
+	
+	/**重试周期 单位秒*/
+	private int retryPeriod;//second
+	
+	/**广播的数据包*/
+	private AbstractDataPacket dataPacket;
+	
+	/** mina IoAcceptor ,通过IoAcceptor获取IoSession*/
+	private IoAcceptor acceptor;
+	
+	/**活动的广播目的地址队列*/
+	private Map<Long,Date> activeSessions;
+	
+	/**失败的广播目的地址队列*/
+	private Map<Long,Date> failedSessions;
+	
+	/**成功的广播目的地址队列*/
+	private Map<Long,Date> successedSessions;
+	
+	/**重试计数*/
+	private Map<Long,Integer> retryCountMap;
+	
+	/**是否有应答，如果hasResponse=true 则外部程序通过调用responseMessageReceived()方法来响应发送成功
+	 * 如果hasResponse=false 则由广播线程自行判定，session.write()正常执行，则判定为发送成功*/
+	private boolean hasResponse ;
+	
+	private Object lock;
+	
+	/**广播线程结束标识*/
+	private boolean finished;
+	
+	/**广播线程*/
+	private Thread thread;
+	
+	/**
+	 * 构造方法
+	 * @param maxRetryCount 最大重试次数
+	 * @param retryPeriod 重试周期 单位秒
+	 * @param dataPacket 广播的数据包
+	 * @param hasResponse 是否有应答
+	 * @param accptor IoAcceptor
+	 */
+	public UdpResponseBroadcast(int maxRetryCount,int retryPeriod,AbstractDataPacket dataPacket,boolean hasResponse,IoAcceptor accptor){
+		this.maxRetryCount = maxRetryCount;
+		this.retryPeriod = retryPeriod;
+		this.dataPacket = dataPacket;
+		this.hasResponse = hasResponse;
+		this.activeSessions = new HashMap<Long,Date>();
+		this.failedSessions = new HashMap<Long,Date>();
+		this.successedSessions = new HashMap<Long,Date>();
+		this.retryCountMap = new HashMap<Long,Integer>();
+		this.lock = new Object();
+		this.finished = false;
+		this.thread = new Thread(){
+			@Override
+			public void run(){
+				boardcast();
+			}
+		};
+		this.dataPacket = dataPacket;
+		this.acceptor = accptor;
+	}
+	
+	/**
+	 * 增加广播目的地址，在符合以下几个条件时广播目的地址才会加入活动对立
+	 * 1)广播线程还未结束
+	 * 2)活动队列中没有该广播目的地址
+	 * 3)未给该广播目的地址成功发送过数据，即successed队列中没有该广播目的地址
+	 * 
+	 * 如果向该广播目的地址发送数据曾经失败过，即在failed队列中有该广播目的地址，则从failed队列中移除该广播目的地址
+	 * @param sessionIds
+	 * @return 增加成功的目的地址的个数
+	 */
+	public int addSessions(long[] sessionIds){
+		int tmp = 0;
+		if(!finished){
+    		synchronized(this.lock){
+    			for(long sessionId:sessionIds){
+    				if(!this.activeSessions.containsKey(sessionId) && !this.successedSessions.containsKey(sessionId)){
+    					this.activeSessions.put(sessionId, new Date());
+    					tmp++;
+    					this.failedSessions.remove(sessionId);
+    				}
+    			}
+    		}
+		}
+		return tmp;
+	}
+	
+	private void boardcast(){
+		
+		while(!this.finished ){
+			
+			if(this.activeSessions.isEmpty()){
+				this.finished = true;
+			}
+			
+			List<Long> activeSessionIds = new ArrayList<Long>();
+			synchronized(this.lock){
+				activeSessionIds.addAll(this.activeSessions.keySet());
+			}
+			for(long sessionId:activeSessionIds){
+				boolean success = false;
+				try{
+					IoSession session = acceptor.getManagedSessions().get(sessionId);
+					session.write(this.dataPacket);
+					success = true;
+				}catch(Exception e){
+					log.warn("boardcast to session[id="+sessionId+"] error",e);
+				}
+				if(success){
+					if(!this.hasResponse){
+						synchronized(this.lock){
+							this.activeSessions.remove(sessionId);
+							this.successedSessions.put(sessionId, new Date());
+						}
+					} else{
+						int count = 0;
+						if(this.retryCountMap.get(sessionId)!=null){
+							count = this.retryCountMap.get(sessionId).intValue();
+						}
+						count++;
+						this.retryCountMap.put(sessionId, count);
+						if(count>this.maxRetryCount){
+							synchronized(this.lock){
+								this.activeSessions.remove(sessionId);
+								this.failedSessions.put(sessionId, new Date());
+							}
+						}
+					}
+				}//success?
+			}//for
+			try{
+				Thread.sleep(1000*this.retryPeriod);
+			}catch(Exception e){
+				log.error("broadcast thread sleep error",e);
+			}
+			
+		}//while
+		
+		log.info("broadcast is finished...");
+	}
+	
+	/**
+	 * 响应广播目的地址已经收到数据，该目的地址将从活动队列中移除，加入到successed队列
+	 * @param sessionId
+	 */
+	public  void responseMessageReceived(long sessionId){
+		if(this.hasResponse){
+    		synchronized(this.lock){
+    			if(this.activeSessions.remove(sessionId)!=null){
+    				this.successedSessions.put(sessionId,new Date());
+    			}
+    		}
+		}
+	}
+	
+	/**
+	 * 目的地址是否处于活动状态，即是否处于活动队列中
+	 * @param sessionId
+	 * @return true 如果该目的地址还在活动队列中
+	 */
+	public boolean isActiveSession(long sessionId){
+		return this.activeSessions.containsKey(sessionId);
+	}
+	
+	/**
+	 * 目的地址是否处于fail状态，即是否处于failed队列中
+	 * @param sessionId
+	 * @return true 如果该目的地址处于fail状态
+	 */
+	public boolean isFailedSession(long sessionId){
+		return this.failedSessions.containsKey(sessionId);
+	}
+	
+	/**
+	 * 目的地址是否处于success状态，即是否处于successed队列中
+	 * @param sessionId
+	 * @return true 如果该目的地址处于success状态
+	 */
+	public boolean isSuccessedSession(long sessionId){
+		return this.successedSessions.containsKey(sessionId);
+	}
+	
+	/**
+	 * 启动广播线程
+	 */
+	public void start(){
+		this.thread.start();
+	}
+	
+	 /**
+	  * 取消广播线程，在当前轮询之后结束,还在活动队列中的广播目的地址将被移除并加入到failed队列中。
+	  * 取消后的广播线程将不能恢复。
+	  */
+	public void cancel(){
+		this.finished = true;
+		this.thread = null;
+		this.failedSessions.putAll(this.activeSessions);
+	}
+	
+
+}

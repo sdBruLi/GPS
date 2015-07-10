@@ -1,0 +1,26 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:参数查询
+ */
+public class ParameterQueryMessage extends BaseDownMessage {
+
+	public ParameterQueryMessage(String mobileNum, String messageKey) {
+		this.setCommand(MessageCommands.Server_Parameter_Query);
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_query_parameter);
+		pack.setMobileNum(this.getMobileNum());
+		return pack;
+	}
+
+}

@@ -1,0 +1,103 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8103;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8103_param_item;
+import com.china317.core.codec.jtt808_2011.util.DefaultCharset;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:参数下发
+ */
+public class ParameterSetting extends BaseDownMessage {
+	private byte									paramCount;
+	private List<ParameterItem>						paramList;
+
+	public ParameterSetting(String mobileNum, String messageKey, List<ParameterItem> paramList) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setParamCount((byte) paramList.size());
+		this.setParamList(paramList);
+		this.setCommand(MessageCommands.Server_Setting_Parameter);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_setting_parameter);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8103 body = new JT808MsgBody_0x8103();
+		body.setParamCount(this.getParamCount());
+		List<JT808MsgBody_0x8103_param_item> items = new ArrayList<JT808MsgBody_0x8103_param_item>();
+		for (ParameterItem item : paramList) {
+			JT808MsgBody_0x8103_param_item i = new JT808MsgBody_0x8103_param_item();
+			i.setParamID(item.getParamId());
+			i.setParamLen(item.getParamLen());
+			i.setParamValue(getBuffer(item.getParamId(),item.getParamLen(), item.getValue()));
+			items.add(i);
+		}
+		body.setParamList(items);
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+	private IoBuffer getBuffer(int paramID, byte len, Object value) throws Exception {
+		IoBuffer buf = IoBuffer.allocate(1).setAutoExpand(true);
+		
+		if ((paramID == 0x0010) || (paramID == 0x0011) || (paramID == 0x0012) ||
+				(paramID == 0x0013) || (paramID == 0x0014) || (paramID == 0x0015) ||
+				(paramID == 0x0016) || (paramID == 0x0017) || (paramID == 0x0040) ||
+				(paramID == 0x0041) || (paramID == 0x0042) || (paramID == 0x0043) ||
+				(paramID == 0x0044) || (paramID == 0x0048) || (paramID == 0x0049) ||
+				(paramID == 0x0083)) {
+			String line = (String) value;
+			buf.putString(line, DefaultCharset.encoder);
+			
+		} else if ((paramID == 0x0031) || (paramID == 0x0081) || (paramID == 0x0082)) {
+			Short s = (Short) value;
+			buf.putShort(s);
+			
+		} else if (paramID == 0x0084) {
+			Byte b = (Byte) value;
+			buf.put(b);
+			
+		} else {
+			Integer i = (Integer) value;
+			buf.putInt(i);
+			
+		}
+		buf.flip();
+		return buf;
+	}
+
+	public static void main(String[] args) {
+		
+	}
+
+	public byte getParamCount() {
+		return paramCount;
+	}
+
+	/**参数项数*/
+	public void setParamCount(byte paramCount) {
+		this.paramCount = paramCount;
+	}
+
+	public List<ParameterItem> getParamList() {
+		return paramList;
+	}
+
+	/**参数值列*/
+	public void setParamList(List<ParameterItem> paramList) {
+		this.paramList = paramList;
+	}
+
+	
+}

@@ -1,0 +1,105 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8303;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8303_item;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:信息点播菜单设置
+ */
+public class SettingInfoOrderMenuMsg extends BaseDownMessage {
+
+	/** 删除全部 */
+	public static final byte	SETTING_DELETE	= 0;	// 删除终端全部信息项
+	/** 更新 */
+	public static final byte	SETTING_UPDATE	= 1;	// 更新菜单
+	/** 追加 */
+	public static final byte	SETTING_ADD		= 2;	// 追加菜单
+	/** 修改 */
+	public static final byte	SETTING_MODIFY	= 3;	// 修改菜单
+	//
+	private byte				settingType;			// 设置类型
+	private byte				infoItemCount;			// 信息项总数
+	private List<OrderInfoItem>	infoItems;				// 信息项列表
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param settingType
+	 *            设置类型
+	 * @param infoItems
+	 *            信息项列表
+	 * @return UnitPackJT808
+	 * @throws Exception
+	 *             生成信息点播菜单设置协议封装对象
+	 */
+	public SettingInfoOrderMenuMsg(String mobileNum, String messageKey, byte settingType, List<OrderInfoItem> infoItems) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setSettingType(settingType);
+		if (infoItems != null) {
+			this.setInfoItemCount((byte) infoItems.size());
+			this.setInfoItems(infoItems);
+		}
+
+		this.setCommand(MessageCommands.Server_Setting_Info_Order_Menu);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_order_menu_setting);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8303 body = new JT808MsgBody_0x8303();
+		body.setSettingType(this.getSettingType());
+		if (this.infoItems != null) {
+			body.setInfoItemCount((byte) this.infoItems.size());
+			List<JT808MsgBody_0x8303_item> infoItemList = new ArrayList<JT808MsgBody_0x8303_item>();
+			for (OrderInfoItem item : this.infoItems) {
+				JT808MsgBody_0x8303_item i = new JT808MsgBody_0x8303_item();
+				i.setInfoName(item.getInfoName());
+				i.setInfoNameLen(item.getInfoNameLen());
+				i.setInfoType(item.getInfoType());
+				infoItemList.add(i);
+			}
+			body.setInfoItems(infoItemList);
+		}
+
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getSettingType() {
+		return settingType;
+	}
+
+	/** 设置类型 */
+	public void setSettingType(byte settingType) {
+		this.settingType = settingType;
+	}
+
+	public byte getInfoItemCount() {
+		return infoItemCount;
+	}
+
+	/** 菜单数 */
+	public void setInfoItemCount(byte infoItemCount) {
+		this.infoItemCount = infoItemCount;
+	}
+
+	public List<OrderInfoItem> getInfoItems() {
+		return infoItems;
+	}
+
+	/** 菜单信息列 */
+	public void setInfoItems(List<OrderInfoItem> infoItems) {
+		this.infoItems = infoItems;
+	}
+
+}

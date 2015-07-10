@@ -1,0 +1,125 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8302;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8302_AnswerItem;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:发起提问
+ */
+public class SendQuestionMessage extends BaseDownMessage {
+	/**紧急信息*/
+	public static final byte						MSG_TYPE_URGENT				= 1;	// 紧急信息
+	/**普通信息*/
+	public static final byte						MSG_TYPE_COMMON				= 0;	// 普通信息
+	
+	/**终端TTS播读*/
+	public static final byte 						TTS_ON						= 1;	// 终端TTS播读
+	/**终端TTS不播读*/
+	public static final byte						TTS_OFF						= 0;	// 终端TTS不播读
+	
+	/**广告屏显示*/
+	public static final byte 						ADV_PANEL_ON				= 1;	//广告屏显示
+	/**广告屏不显示*/
+	public static final byte						ADV_PANEL_OFF				= 0;	//广告屏不显示
+	//
+	private byte									sign;								// 标志
+	private byte									problemContentLen;					// 问题内容长度
+	private String									problem;							// 问题
+	private List<QuestionAnswer>					answerItems;						// 候选答案列表
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param problem 问题
+	 * @param msgType 信息紧急情况
+	 * @param tts 是否终端TTS播读
+	 * @param advPanel 是否广告屏显示
+	 * @param answerItems 候选答案列表
+	 * @param messageKey
+	 */
+	public SendQuestionMessage(String mobileNum, String messageKey, String problem, byte msgType, 
+			byte tts, byte advPanel, List<QuestionAnswer> answerItems) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setProblem(problem);
+		this.setSign(getSign(msgType, tts, advPanel));
+		this.setAnswerItems(answerItems);
+		this.setCommand(MessageCommands.Server_Question);
+	}
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_question);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8302 body = new JT808MsgBody_0x8302();
+		body.setSign(this.getSign());
+		body.setProblemContentLen((byte) this.getProblem().getBytes("GBK").length);
+		body.setProblem(this.getProblem());
+		List<JT808MsgBody_0x8302_AnswerItem> answers = null;
+		if (answerItems != null) {
+			for (QuestionAnswer a : answerItems) {
+				if (answers == null) {
+					answers = new ArrayList<JT808MsgBody_0x8302_AnswerItem>();
+				}
+				JT808MsgBody_0x8302_AnswerItem i = new JT808MsgBody_0x8302_AnswerItem();
+				i.setAnswerContent(a.getAnswerContent());
+				i.setAnswerContentLen((short) a.getAnswerContent().getBytes("GBK").length);
+				i.setAnswerId(a.getAnswerId());
+				answers.add(i);
+			}
+		}
+		body.setAnswerItems(answers);
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	
+	private static byte getSign(byte msgType, byte tts, byte advPanel) {
+		byte sign = 0;
+		sign = (byte) (msgType | (tts << 3) | (advPanel << 4));
+		return sign;
+	}
+	
+	public byte getSign() {
+		return sign;
+	}
+
+	/**紧急度标志*/
+	public void setSign(byte sign) {
+		this.sign = sign;
+	}
+
+	public byte getProblemContentLen() {
+		return problemContentLen;
+	}
+
+	/**问题长度*/
+	public void setProblemContentLen(byte problemContentLen) {
+		this.problemContentLen = problemContentLen;
+	}
+
+	public String getProblem() {
+		return problem;
+	}
+
+	/**问题*/
+	public void setProblem(String problem) {
+		this.problem = problem;
+	}
+
+	public List<QuestionAnswer> getAnswerItems() {
+		return answerItems;
+	}
+
+	/**答案列*/
+	public void setAnswerItems(List<QuestionAnswer> answerItems) {
+		this.answerItems = answerItems;
+	}
+
+
+}

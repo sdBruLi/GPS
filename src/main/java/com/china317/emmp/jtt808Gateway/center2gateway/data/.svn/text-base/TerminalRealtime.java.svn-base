@@ -1,0 +1,32 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+import com.china317.core.codec.jtt808_2011.util.ByteUtil;
+
+public class TerminalRealtime {
+	private String realtime;
+	
+	public String getRealtime() {
+		return realtime;
+	}
+	public void setRealtime(String realtime) {
+		this.realtime = realtime;
+	}
+	
+	public void parse(byte[] datas) {
+		realtime = ByteUtil.getHexString(datas);
+		
+	}
+	public IoBuffer getBuffer() {
+		IoBuffer buf = IoBuffer.allocate(3).setAutoExpand(true);
+		buf.put(ByteUtil.string2BCD(realtime, 6));
+		buf.flip();
+		return buf;
+	}
+	@Override
+	public String toString() {
+		return "Terminal Realtime : " + realtime;
+	}
+	
+}

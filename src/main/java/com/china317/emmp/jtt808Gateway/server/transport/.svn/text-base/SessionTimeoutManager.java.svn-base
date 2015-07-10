@@ -1,0 +1,196 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.emmp.jtt808Gateway.server.common.config.Config;
+import com.china317.emmp.jtt808Gateway.server.common.config.ThreadConfig;
+
+public class SessionTimeoutManager extends Thread {
+	private Log								log					= LogFactory.getLog(SessionTimeoutManager.class);
+
+	private static SessionTimeoutManager	manager				= new SessionTimeoutManager();
+	private Map<Long, VehSession>			sessionMap			= new HashMap<Long, VehSession>();
+	private static long						lastDataTimeout		= 10 * 60 * 1000;
+	private static long						openSessionTimeout	= 20 * 1000;
+	private static ThreadConfig				config				= null;
+
+	private static long						put					= 0;
+	private static long						remove				= 0;
+
+	private SessionTimeoutManager() {
+		config = Config.getThreadConfig(SessionTimeoutManager.class);
+		if ((config.getOpenSessionTimeout() * 1000) > openSessionTimeout) {
+			openSessionTimeout = config.getOpenSessionTimeout() * 1000;
+		}
+		if ((config.getLastDataTimeout() * 1000) > lastDataTimeout) {
+			lastDataTimeout = config.getLastDataTimeout() * 1000;
+		}
+	}
+
+	public static SessionTimeoutManager getInstance() {
+		return manager;
+	}
+
+	public void putSession(IoSession session) {
+		log.debug("SessionTimeoutManager putSession sessionId : " + session.getId());
+		VehSession vehSession = new VehSession(session);
+		synchronized (sessionMap) {
+			this.sessionMap.put(session.getId(), vehSession);
+			put++;
+		}
+	}
+
+	public void updSessionLastTime(IoSession session, String mobileNum) {
+		VehSession vehSession = getSession(session);
+		if (vehSession != null) {
+			vehSession.updLastDataTime();
+		}
+	}
+
+	public VehSession getSession(IoSession session) {
+		return this.sessionMap.get(session.getId());
+	}
+
+	public void removeSession(Long sessionId) {
+//		if (this.sessionMap.get(sessionId) != null) {
+//			VehSession vehSession = this.sessionMap.get(sessionId);
+//			synchronized (sessionMap) {
+//				Iterator<Long> it = sessionMap.keySet().iterator();
+//
+//				while (it.hasNext()) {
+//					Long id = it.next();
+//					if (sessionId.longValue() == id.longValue()) {
+//						it.remove();
+//						vehSession.closeSession();
+//						log.info("removeSession[" + vehSession.getSession().getRemoteAddress().toString() + "] mobileNum["
+//								+ vehSession.getMobileNum() + "]create " + sdf.format(vehSession.getCreatetime()));
+//						remove++;
+//						break;
+//					}
+//				}
+//			}
+//		}
+		VehSession remove2 = sessionMap.remove(sessionId);
+		if(remove2!=null){
+			remove2.closeSession();
+			remove++;
+		}
+	}
+
+	@Override
+	public void run() {
+		while (true) {
+			try {
+				synchronized (sessionMap) {
+					Iterator<VehSession> iterator = this.sessionMap.values().iterator();
+					while (iterator.hasNext()) {
+						VehSession vehSession = iterator.next();
+						if (vehSession.isTimeout()) {
+							vehSession.closeSession();
+							iterator.remove();
+							remove++;
+//							log.info(" removeSession [" + vehSession.getSession().getRemoteAddress().toString() + "] mobileNum["
+//									+ vehSession.getMobileNum() + "]create" + sdf.format(vehSession.getCreatetime()));
+
+						}
+					}
+				}
+				log.info("++++++put " + put + " ,remove " + remove + " ,mapsize " + sessionMap.size());
+				put=0;
+				remove=0;
+				sleep(20 * 1000);
+			} catch (Exception e) {
+				log.error("", e);
+			}
+		}
+	}
+
+	SimpleDateFormat	sdf	= new SimpleDateFormat("yyMMddHHmmss");
+
+	class VehSession {
+		private long		openSessionTime	= 0;
+		private long		lastDataTime	= 0;
+		private IoSession	session;
+		private long		sessionId;
+		private String		mobileNum		= "";
+		private Date		createtime;
+
+		public Date getCreatetime() {
+			return createtime;
+		}
+
+		public void setCreatetime(Date createtime) {
+			this.createtime = createtime;
+		}
+
+		public VehSession(IoSession session) {
+			this.session = session;
+			this.sessionId = session.getId();
+			this.createtime = new Date();
+			setOpenSessionTime();
+		}
+
+		public void updLastDataTime() {
+			this.lastDataTime = System.currentTimeMillis();
+		}
+
+		public void setOpenSessionTime() {
+			this.openSessionTime = System.currentTimeMillis();
+		}
+
+		public void closeSession() {
+			try {
+				session.close(false);
+			} catch (Exception e) {
+				log.error("", e);
+			}
+		}
+
+		public boolean isTimeout() {
+			boolean isTimeout = false;
+			if (this.lastDataTime == 0) {
+				if ((System.currentTimeMillis() - this.openSessionTime) > SessionTimeoutManager.openSessionTimeout) {
+					isTimeout = true;
+				}
+			} else {
+				if ((System.currentTimeMillis() - this.lastDataTime) > SessionTimeoutManager.lastDataTimeout) {
+					isTimeout = true;
+				}
+			}
+			return isTimeout;
+		}
+
+		public long getSessionId() {
+			return sessionId;
+		}
+
+		public void setSessionId(long sessionId) {
+			this.sessionId = sessionId;
+		}
+
+		public IoSession getSession() {
+			return session;
+		}
+
+		public void setSession(IoSession session) {
+			this.session = session;
+		}
+
+		public String getMobileNum() {
+			return mobileNum;
+		}
+
+		public void setMobileNum(String mobileNum) {
+			this.mobileNum = mobileNum;
+		}
+
+	}
+}

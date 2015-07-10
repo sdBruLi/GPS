@@ -1,0 +1,84 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0802;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0802_item;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:多媒体数据检索应答
+ */
+public class StoreMultiDataSearchResponseMsg extends BaseUpMessage {
+	private static final Log			log	= LogFactory.getLog(StoreMultiDataSearchResponseMsg.class);
+	private short						ackSeqNum;														// 应答流水号
+	private short						multimediaItemCount;											// 多媒体数据总项数
+	private List<MultiDataSearchItem>	items;															// 检索项
+
+	public StoreMultiDataSearchResponseMsg() {
+		this.setCommand(MessageCommands.Client_Store_MultiData_Search_Rsp);
+	}
+
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		this.unpackHeadPart(pack);
+		try {
+			JT808MsgBody_0x0802 body = (JT808MsgBody_0x0802) pack.getMsgBody();
+			this.setAckSeqNum(body.getAckSeqNum());
+			this.setMultimediaItemCount(body.getMultimediaItemCount());
+			if (body.getItems() != null) {
+				List<MultiDataSearchItem> itemList = new ArrayList<MultiDataSearchItem>();
+				for (JT808MsgBody_0x0802_item i : body.getItems()) {
+					MultiDataSearchItem item = new MultiDataSearchItem();
+					item.setChannelID(i.getChannelID());
+					item.setEventItemCoding(i.getEventItemCoding());
+					PositionMessage position = new PositionMessage();
+					position.unpackBody(i.getGpsData());
+					item.setGpsData(position);
+					item.setMultimediaID(i.getMultimediaID());
+					item.setMultimediaType(i.getMultimediaType());
+					itemList.add(item);
+				}
+				this.setItems(itemList);
+			}
+
+		} catch (Exception e) {
+			log.error("", e);
+		}
+	}
+
+	public short getAckSeqNum() {
+		return ackSeqNum;
+	}
+
+	/** 应答流水 */
+	public void setAckSeqNum(short ackSeqNum) {
+		this.ackSeqNum = ackSeqNum;
+	}
+
+	public short getMultimediaItemCount() {
+		return multimediaItemCount;
+	}
+
+	/** 媒体数 */
+	public void setMultimediaItemCount(short multimediaItemCount) {
+		this.multimediaItemCount = multimediaItemCount;
+	}
+
+	public List<MultiDataSearchItem> getItems() {
+		return items;
+	}
+
+	/** 媒体项 */
+	public void setItems(List<MultiDataSearchItem> items) {
+		this.items = items;
+	}
+
+}

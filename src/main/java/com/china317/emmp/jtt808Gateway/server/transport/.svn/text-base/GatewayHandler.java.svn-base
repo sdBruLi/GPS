@@ -1,0 +1,92 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.codec.jtt808Gateway.GatewayCMD;
+import com.china317.core.codec.jtt808Gateway.GatewayUnitPack;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x0001;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x0011;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x8011;
+import com.china317.emmp.jtt808Gateway.server.processor.Gateway2VehProcessor;
+import com.china317.emmp.jtt808Gateway.server.processor.Veh2GatewayProcessor;
+
+public class GatewayHandler extends IoHandlerAdapter {
+	private final static Log	log	= LogFactory.getLog(GatewayHandler.class);
+
+	@Override
+	public void sessionOpened(IoSession session) throws Exception {
+		// System.out.println();
+	}
+
+	@Override
+	public void messageReceived(IoSession session, Object message) throws Exception {
+		try {
+			if (message instanceof GatewayUnitPack) {
+				GatewayUnitPack unit = (GatewayUnitPack) message;
+				//
+				if (unit.getCMD() == GatewayCMD.CREATE_LINK) {
+					GatewayBody_0x0001 body0001 = (GatewayBody_0x0001) unit.getMsgBody();
+					if (Veh2GatewayProcessor.login(session, unit)) {
+					} else {
+						session.close(false);
+					}
+				} else {
+					if (!Veh2GatewayProcessor.checkLogin(session)) {
+						session.close(false);
+					}
+					switch (unit.getCMD()) {
+						case GatewayCMD.HEART_LINK:
+							GatewayUnitPack heartRes = new GatewayUnitPack(GatewayCMD.HEART_LINK_RESPONSE);
+							heartRes.setSequenceNum(unit.getSequenceNum());
+							session.write(heartRes);
+							break;
+						case GatewayCMD.RECEIVE_TRANS_VEH_MSG:
+							log.debug("received :" + unit.toString() + "");
+							int status = Gateway2VehProcessor.processTransData(unit, session);
+							GatewayUnitPack receiveUnit = new GatewayUnitPack(GatewayCMD.RECEIVE_TRANS_VEH_MSG_RESPONSE);
+							receiveUnit.setSequenceNum(unit.getSequenceNum());
+							GatewayBody_0x0011 body0011 = (GatewayBody_0x0011) unit.getMsgBody();
+							GatewayBody_0x8011 gbody = new GatewayBody_0x8011();
+							gbody.setSessionid(body0011.getSessionid());
+							gbody.setStatus(status);
+							gbody.setMessageId(body0011.getMessageId());
+							gbody.setSequenceNum(0);
+							receiveUnit.setMsgBody(gbody);
+							session.write(receiveUnit);
+							break;
+						case GatewayCMD.SEND_MULTI_MSG_RESPONSE:
+							Veh2GatewayProcessor.putResponse(session, unit);
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.toString(), e);
+		}
+	}
+
+	@Override
+	public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
+		try {
+			log.error("exceptionCaught " + cause.getMessage());
+			Veh2GatewayProcessor.removeSession(session);
+			session.close(false);
+		} catch (Exception e) {
+			log.error(e.toString(), e);
+		}
+	}
+
+	@Override
+	public void sessionClosed(IoSession session) throws Exception {
+		try {
+			Veh2GatewayProcessor.removeSession(session);
+		} catch (Exception e) {
+			log.error(e.toString(), e);
+		}
+	}
+}

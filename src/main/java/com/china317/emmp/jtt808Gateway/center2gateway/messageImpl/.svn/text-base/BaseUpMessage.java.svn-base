@@ -1,0 +1,80 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.Date;
+
+import com.china317.core.base.UpMessage;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+
+public abstract class BaseUpMessage implements UpMessage{
+	private int msgId;
+	private String uniqueIndex;
+	private String mobileNum;
+	private int sequenceNum;
+	private String command;
+	private Date createTime;
+	public BaseUpMessage(){
+		createTime = new Date(System.currentTimeMillis());
+	}
+	 
+	public void unpackHeadPart(UnitPackJT808 pack){
+		this.setMsgId(pack.getMsgID());
+		this.setUniqueIndex( pack.getUniqueIndex());
+		this.setSequenceNum(pack.getSequenceNum());
+		this.setMobileNum(pack.getMobileNum());
+	}
+	
+	public int getMsgId() {
+		return msgId;
+	}
+
+	/**消息号*/
+	public void setMsgId(int msgId) {
+		this.msgId = msgId;
+	}
+
+	/**消息号*/
+	public void setCommand(String command){
+		this.command = command;
+	}
+	/**序列号*/
+	public void setSequenceNum(int sequenceNum){
+		this.sequenceNum = sequenceNum;
+		
+	}
+	public void setUniqueIndex(String uniqueIndex){
+		this.uniqueIndex = uniqueIndex;
+	}
+	
+	public int getSequenceNum(){
+		return this.sequenceNum;
+	}
+	public String getUniqueIndex() {
+		// TODO Auto-generated method stub
+		return this.uniqueIndex;
+	}
+
+	@Override
+	public String getCommand() {
+		// TODO Auto-generated method stub
+		return this.command;
+		
+	}
+
+	public String getMobileNum() {
+		return mobileNum;
+	}
+	/**终端SIM号*/
+	public void setMobileNum(String mobileNum) {
+		this.mobileNum = mobileNum;
+	}
+
+	public Date getCreateTime() {
+		return createTime;
+	}
+
+	/**收到消息时间*/
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+	
+}

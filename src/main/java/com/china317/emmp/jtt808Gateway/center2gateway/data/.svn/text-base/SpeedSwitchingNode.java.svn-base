@@ -1,0 +1,24 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+public class SpeedSwitchingNode {
+	private byte speed;
+	private byte switching;
+	
+	public byte getSpeed() {
+		return speed;
+	}
+	public void setSpeed(byte speed) {
+		this.speed = speed;
+	}
+	public byte getSwitching() {
+		return switching;
+	}
+	public void setSwitching(byte switching) {
+		this.switching = switching;
+	}
+	@Override
+	public String toString() {
+		return speed + ":" + switching;
+	}
+
+}

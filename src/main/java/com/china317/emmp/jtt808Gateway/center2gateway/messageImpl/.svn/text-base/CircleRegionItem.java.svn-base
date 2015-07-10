@@ -1,0 +1,101 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+public class CircleRegionItem {
+	
+	private int						regionId;						// 区域ID
+	private RegionItemAttri			regionAttribute;				// 区域属性
+	private int						centerLatitude;					// 中心点纬度，单位是乘以10的6次方
+	private int						centerLongitude;				// 中心点经度
+	private int						radius;							// 半径，单位为m
+	private String					startTime 			= "";		// 起始时间
+	private String					stopTime			= "";		// 结束时间
+	private short					maxSpeed;						// 最大速度
+	private byte					overspeedTime;					// 超速持续时间
+
+	public CircleRegionItem(int	regionId,RegionItemAttri regionAttribute,
+			int	centerLatitude, int centerLongitude, int radius,
+			String startTime, String stopTime, short maxSpeed,
+			byte overspeedTime) {
+		this.regionId = regionId;
+		this.regionAttribute = regionAttribute;
+		this.centerLatitude = centerLatitude;
+		this.centerLongitude = centerLongitude;
+		this.radius = radius;
+		this.startTime = startTime;
+		this.stopTime = stopTime;
+		this.maxSpeed = maxSpeed;
+		this.overspeedTime = overspeedTime;
+	}
+	public int getRegionId() {
+		return regionId;
+	}
+
+	public void setRegionId(int regionId) {
+		this.regionId = regionId;
+	}
+
+	public RegionItemAttri getRegionAttribute() {
+		return regionAttribute;
+	}
+
+	public void setRegionAttribute(RegionItemAttri regionAttribute) {
+		this.regionAttribute = regionAttribute;
+	}
+
+	public int getCenterLatitude() {
+		return centerLatitude;
+	}
+
+	public void setCenterLatitude(int centerLatitude) {
+		this.centerLatitude = centerLatitude;
+	}
+
+	public int getCenterLongitude() {
+		return centerLongitude;
+	}
+
+	public void setCenterLongitude(int centerLongitude) {
+		this.centerLongitude = centerLongitude;
+	}
+
+	public int getRadius() {
+		return radius;
+	}
+
+	public void setRadius(int radius) {
+		this.radius = radius;
+	}
+
+	public String getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+
+	public String getStopTime() {
+		return stopTime;
+	}
+
+	public void setStopTime(String stopTime) {
+		this.stopTime = stopTime;
+	}
+
+	public short getMaxSpeed() {
+		return maxSpeed;
+	}
+
+	public void setMaxSpeed(short maxSpeed) {
+		this.maxSpeed = maxSpeed;
+	}
+
+	public byte getOverspeedTime() {
+		return overspeedTime;
+	}
+
+	public void setOverspeedTime(byte overspeedTime) {
+		this.overspeedTime = overspeedTime;
+	}
+	
+}

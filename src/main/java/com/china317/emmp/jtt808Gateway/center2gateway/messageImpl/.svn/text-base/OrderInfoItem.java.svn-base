@@ -1,0 +1,55 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.io.UnsupportedEncodingException;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:信息菜单
+ */
+public class OrderInfoItem {
+
+	private byte	infoType;		// 信息类型
+	private short	infoNameLen;	// 信息名称长度
+	private String	infoName;		// 信息名称
+
+	public OrderInfoItem(byte infoType, String infoName) {
+		this.infoType = infoType;
+		if (infoName != null) {
+			try {
+				this.infoNameLen = (short) infoName.getBytes("GBK").length;
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			this.infoName = infoName;
+		}
+	}
+
+	public byte getInfoType() {
+		return infoType;
+	}
+
+	/** 信息类型 */
+	public void setInfoType(byte infoType) {
+		this.infoType = infoType;
+	}
+
+	public short getInfoNameLen() {
+		return infoNameLen;
+	}
+
+	/** 信息名长度 */
+	public void setInfoNameLen(short infoNameLen) {
+		this.infoNameLen = infoNameLen;
+	}
+
+	public String getInfoName() {
+		return infoName;
+	}
+
+	/** 信息名 */
+	public void setInfoName(String infoName) {
+		this.infoName = infoName;
+	}
+
+}

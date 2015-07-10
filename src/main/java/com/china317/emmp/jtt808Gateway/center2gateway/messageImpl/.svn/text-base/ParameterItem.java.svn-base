@@ -1,0 +1,43 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+
+public class ParameterItem {
+	private int					paramId;
+	private byte				paramLen;
+	private Object				value;
+
+	public ParameterItem(){
+		
+	}
+	public ParameterItem(int paramId, byte paramLen, Object value) {
+		this.paramId = paramId;
+		this.paramLen = paramLen;
+		this.value = value;
+	}
+
+	public int getParamId() {
+		return paramId;
+	}
+
+	public void setParamId(int paramId) {
+		this.paramId = paramId;
+	}
+
+
+	public byte getParamLen() {
+		return paramLen;
+	}
+
+	public void setParamLen(byte paramLen) {
+		this.paramLen = paramLen;
+	}
+
+	public Object getValue() {
+		return value;
+	}
+
+	public void setValue(Object value) {
+		this.value = value;
+	}
+	
+}

@@ -1,0 +1,119 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8802;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:多媒体数据检索
+ */
+public class StoreMultiDataSearchMsg extends BaseDownMessage {
+	public static final byte	MULTIMEDIA_TYPE_IMAGE			= 0;	// 多媒体类型---图像
+	public static final byte	MULTIMEDIA_TYPE_AUDIO			= 1;	// 多媒体类型---音频
+	public static final byte	MULTIMEDIA_TYPE_VIDEO			= 2;	// 多媒体类型---视频
+	public static final byte	MULTIMEDIA_FORMAT_JPEG			= 0;	// 多媒体格式---JPEG
+	public static final byte	MULTIMEDIA_FORMAT_TIF			= 1;	// 多媒体格式---TIF
+	public static final byte	MULTIMEDIA_FORMAT_MP3			= 2;	// 多媒体格式---MP3
+	public static final byte	MULTIMEDIA_FORMAT_WAV			= 3;	// 多媒体格式---WAV
+	public static final byte	MULTIMEDIA_FORMAT_WMV			= 4;	// 多媒体格式---WMV
+	public static final byte	EVENT_ITEM_CODING_PLATFORM		= 0;	// 事件项编码---平台下方指令
+	public static final byte	EVENT_ITEM_CODING_TIMING		= 1;	// 事件项编码---定时动作
+	public static final byte	EVENT_ITEM_CODING_ALERT_ROBBERY	= 2;	// 事件项编码---抢劫报警触发
+	public static final byte	EVENT_ITEM_CODING_CRASH			= 3;	// 事件项编码---碰撞侧翻报警触发
+
+	private byte				multimediaType;						// 0:图像;1:音频;2:视频
+	private byte				channelID;
+	private byte				eventItemCoding;						// 0:平台下方指令;1:定时动作;2:抢劫报警触发;3:碰撞侧翻报警触发;其他保留
+	private String				startTime;								// 起始时间
+	private String				stopTime;								// 结束时间
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param multimediaType
+	 *            多媒体类型
+	 * @param channelID
+	 *            通道ID
+	 * @param eventItemCoding
+	 *            事件项编码
+	 * @param startTime
+	 *            起始时间
+	 * @param stopTime
+	 *            结束时间 生成存储多媒体数据检索协议封装对象
+	 */
+	public StoreMultiDataSearchMsg(String mobileNum, String messageKey, byte multimediaType, byte channelID, byte eventItemCoding, String startTime,
+			String stopTime) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setChannelID(channelID);
+		this.setEventItemCoding(eventItemCoding);
+		this.setMultimediaType(multimediaType);
+		this.setStartTime(startTime);
+		this.setStopTime(stopTime);
+		this.setCommand(MessageCommands.Server_Store_MultiData_Search);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_store_multimedia_searches);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8802 body = new JT808MsgBody_0x8802();
+		body.setMultimediaType(this.getMultimediaType());
+		body.setChannelID(this.getChannelID());
+		body.setEventItemCoding(this.getEventItemCoding());
+		body.setStartTime(this.getStartTime());
+		body.setStopTime(this.getStopTime());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getMultimediaType() {
+		return multimediaType;
+	}
+
+	/** 媒体类型 */
+	public void setMultimediaType(byte multimediaType) {
+		this.multimediaType = multimediaType;
+	}
+
+	public byte getEventItemCoding() {
+		return eventItemCoding;
+	}
+
+	/** 事件类型 */
+	public void setEventItemCoding(byte eventItemCoding) {
+		this.eventItemCoding = eventItemCoding;
+	}
+
+	public byte getChannelID() {
+		return channelID;
+	}
+
+	/** 拍摄通道 */
+	public void setChannelID(byte channelID) {
+		this.channelID = channelID;
+	}
+
+	public String getStartTime() {
+		return startTime;
+	}
+
+	/** 开始时间 */
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+
+	public String getStopTime() {
+		return stopTime;
+	}
+
+	/** 结束时间 */
+	public void setStopTime(String stopTime) {
+		this.stopTime = stopTime;
+	}
+
+}

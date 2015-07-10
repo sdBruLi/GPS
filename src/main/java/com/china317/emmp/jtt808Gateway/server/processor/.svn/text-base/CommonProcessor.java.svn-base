@@ -1,0 +1,126 @@
+package com.china317.emmp.jtt808Gateway.server.processor;
+
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.base.AbstractDataPacket;
+import com.china317.core.base.DataPacket;
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8100;
+import com.china317.emmp.jtt808Gateway.server.common.config.Config;
+import com.china317.emmp.jtt808Gateway.server.common.config.ThreadConfig;
+import com.china317.emmp.jtt808Gateway.server.transport.VehServer;
+
+public class CommonProcessor extends JT808BaseProcessor {
+	private final static Log	log	= LogFactory.getLog(CommonProcessor.class);
+	private static ThreadConfig	config		= null;
+	public CommonProcessor(String name) {
+		super.setName(name);
+		config = Config.getThreadConfig(CommonProcessor.class);
+	}
+
+	@Override
+	public void processDataPackets(List<AbstractDataPacket> list) {
+		log.debug("JT808 Common Processor...");
+		for (DataPacket pack : list) {
+			if (pack instanceof UnitPackJT808) {
+				UnitPackJT808 packJT808 = (UnitPackJT808) pack;
+				try {
+					switch (packJT808.getMsgID()) {
+					case JT808MsgId.MSGID_CLIENT_register:
+//						writeClose(packJT808.getSessionId(), getResponseRegisterOK(packJT808));
+						break;
+					case JT808MsgId.MSGID_CLIENT_deregister:
+//						writeClose(packJT808.getSessionId(), JT808MsgBody_0x8001.getCommonResponseOK(packJT808));
+						break;
+					case JT808MsgId.MSGID_CLIENT_authentication:
+						if (Gateway2VehProcessor.loginCheck(packJT808.getSessionId(), packJT808)) {
+							Gateway2VehProcessor.putAuth(packJT808.getSessionId(), packJT808);
+//							write(packJT808.getSessionId(), JT808MsgBody_0x8001.getCommonResponseOK(packJT808));
+							log.debug("mobileNum[" + packJT808.getMobileNum() + "] send authentication");
+						} else {
+//							writeClose(packJT808.getSessionId(), JT808MsgBody_0x8001.getCommonResponseFailure(packJT808));
+							log.error("authentication failed  " + " sessionId=" + packJT808.getSessionId() + " MobileNum=" + packJT808.getMobileNum());
+						}
+						break;
+					case JT808MsgId.MSGID_CLIENT_response:
+						log.debug("0x0001, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					case JT808MsgId.MSGID_CLIENT_response_query_parameter:
+						log.debug("0x0104, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					case JT808MsgId.MSGID_CLIENT_response_query_position:
+						log.debug("0x0201, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					case JT808MsgId.MSGID_CLIENT_response_question:
+						log.debug("0x0302, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+					case JT808MsgId.MSGID_CLIENT_vehicle_control:
+						log.debug("0x0500, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					case JT808MsgId.MSGID_CLIENT_driver_record_upload:
+						log.debug("0x0700, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					case JT808MsgId.MSGID_CLIENT_store_multimedia_searches:
+						log.debug("0x0802, received...");
+						Gateway2VehProcessor.processMonitorResponse(packJT808);
+						break;
+					default:
+						break;
+					}
+				} catch (Exception e) {
+					log.error("",e);
+				}
+				
+				//分发数据包（目前到gateway）
+				this.distributePackJT808(packJT808);
+			}
+		}
+		
+	}
+
+	private void distributePackJT808(UnitPackJT808 packJT808) {
+		try {
+			Veh2GatewayProcessor.putInWaitingQueue(packJT808);
+		} catch (Exception e) {
+			log.error("",e);
+		}
+	}
+
+	@Override
+	public void processOverflowDataPacket(AbstractDataPacket dataPacket) {
+		
+	}
+	
+	private static UnitPackJT808 getResponseRegisterOK(UnitPackJT808 requestPack) throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_response_register);
+		pack.setMobileNum(requestPack.getMobileNum());
+		JT808MsgBody_0x8100 body = new JT808MsgBody_0x8100();
+		body.setResponseSequenceNum(requestPack.getSequenceNum());
+		body.setResult(JT808MsgBody_0x8100.RESULT_OK);
+		body.setAuthCode("code:" + System.currentTimeMillis());
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+	protected boolean write(long sessionId, UnitPackJT808 returnPack) {
+		return VehServer.write(sessionId, returnPack, false);
+	}
+	
+	protected boolean writeClose(long sessionId, UnitPackJT808 returnPack) {
+		return VehServer.write(sessionId, returnPack, true);
+	}
+
+	public ThreadConfig getConfig() {
+		return config;
+	}
+
+}

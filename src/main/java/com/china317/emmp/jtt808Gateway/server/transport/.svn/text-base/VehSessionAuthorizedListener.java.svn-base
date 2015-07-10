@@ -1,0 +1,22 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.event.SessionAuthorizedListener;
+
+public class VehSessionAuthorizedListener implements SessionAuthorizedListener {
+
+	public VehSessionAuthorizedListener(String name) {
+//		super(name);
+	}
+
+	public void sessionAuthorizePerformed(IoSession session,
+			String authorizationId) {
+		
+	}
+
+	@Override
+	public void sessionAuthorized(IoSession session, String authorizationId) {
+	}
+
+}

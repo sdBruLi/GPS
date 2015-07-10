@@ -1,0 +1,103 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.io.UnsupportedEncodingException;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+public class VehInfo {
+	private String vehVIN;
+	private String vehLicense;
+	private String vehColor;
+	
+	public void parse(byte[] datas) {
+		try {
+			byte[] vin = new byte[17];
+			System.arraycopy(datas, 0, vin, 0, 17);
+			vehVIN = new String(vin, "GBK");
+		
+			byte[] licence = new byte[12];
+			System.arraycopy(datas, 17, licence, 0, 12);
+			vehLicense = new String(licence, "GBK");
+			
+			byte[] color = new byte[8];
+			System.arraycopy(datas, 29, color, 0, 8);
+			vehColor = new String(color, "GBK");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public IoBuffer getBuffer() {
+		IoBuffer buf = IoBuffer.allocate(3).setAutoExpand(true);
+		try {
+			byte[] dest = this.vehVIN.getBytes("GBK");
+			byte[] dest2 = new byte[17];
+			int length = 17;
+			if (dest.length < 17) {
+				length = dest.length;
+			}
+			System.arraycopy(dest, 0, dest2, 0, length);
+			buf.put(dest2);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			byte[] dest = this.vehLicense.getBytes("GBK");
+			byte[] dest2 = new byte[12];
+			int length = 12;
+			if (dest.length < 12) {
+				length = dest.length;
+			}
+			System.arraycopy(dest, 0, dest2, 0, length);
+			buf.put(dest2);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			byte[] dest = this.vehColor.getBytes("GBK");
+			byte[] dest2 = new byte[8];
+			int length = 8;
+			if (dest.length < 8) {
+				length = dest.length;
+			}
+			System.arraycopy(dest, 0, dest2, 0, length);
+			buf.put(dest2);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		buf.flip();
+		return buf;
+	}
+	@Override
+	public String toString() {
+		return "vehVIN : " + vehVIN.trim() + " vehLicense:" + vehLicense.trim() + " vehColor" + vehColor.trim();
+	}
+
+	public String getVehVIN() {
+		return vehVIN;
+	}
+
+	public void setVehVIN(String vehVIN) {
+		this.vehVIN = vehVIN;
+	}
+
+	public String getVehLicense() {
+		return vehLicense;
+	}
+
+	public void setVehLicense(String vehLicense) {
+		this.vehLicense = vehLicense;
+	}
+
+	public String getVehColor() {
+		return vehColor;
+	}
+
+	public void setVehColor(String vehColor) {
+		this.vehColor = vehColor;
+	}
+	
+}

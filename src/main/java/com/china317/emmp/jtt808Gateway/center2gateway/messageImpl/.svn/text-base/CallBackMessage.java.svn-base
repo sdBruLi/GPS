@@ -1,0 +1,70 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8400;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45 
+ * @author: Greg
+ * @description:回拨电话
+ */
+public class CallBackMessage extends BaseDownMessage {
+	/** 普通通话 */
+	public static final byte	PHONE_COMMON	= 0;	// 普通通话
+	/** 监听 */
+	public static final byte	PHONE_MONITOR	= 1;	// 监听
+	//
+	private byte				sign;					// 标志
+	private String				phoneNum;				// 电话号码
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param sign
+	 *            标志
+	 * @param phoneNum
+	 *            电话号码
+	 * @return UnitPackJT808
+	 * @throws Exception
+	 *             生成电话回拨协议封装对象
+	 */
+	public CallBackMessage(String mobileNum, String messageKey, byte sign, String phoneNum) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setSign(sign);
+		this.setPhoneNum(phoneNum);
+		this.setCommand(MessageCommands.Server_Call_Back);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_phone_callback);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8400 body = new JT808MsgBody_0x8400();
+		body.setSign(this.getSign());
+		body.setPhoneNum(this.getPhoneNum());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getSign() {
+		return sign;
+	}
+
+	/** 通话标志 */
+	public void setSign(byte sign) {
+		this.sign = sign;
+	}
+
+	public String getPhoneNum() {
+		return phoneNum;
+	}
+
+	/** 电话号码 */
+	public void setPhoneNum(String phoneNum) {
+		this.phoneNum = phoneNum;
+	}
+
+}

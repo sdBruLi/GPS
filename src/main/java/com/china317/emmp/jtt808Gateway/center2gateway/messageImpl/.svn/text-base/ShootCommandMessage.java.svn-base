@@ -1,0 +1,181 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8801;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:发起立即拍照
+ */
+public class ShootCommandMessage extends BaseDownMessage {
+	/** 停止 */
+	public static final short	SHOT_COMMAND_STOP			= 0;				// 拍摄命令---停止拍摄
+	/** 录像 */
+	public static final short	SHOT_COMMAND_VIDEO			= (short) 0xFFFF;	// 拍摄命令---录像
+	/** 保存 */
+	public static final byte	SAVE_SIGN_SAVE				= 1;				// 保存标志---保存
+	/** 实时上传 */
+	public static final byte	SAVE_SIGN_UPLOAD			= 0;				// 保存标志---实时上传
+	/** 320*240 */
+	public static final byte	RESOLUTION_320_240			= 1;				// 分辨率 ---320*240
+	/** 640*480 */
+	public static final byte	RESOLUTION_640_480			= 2;				// 分辨率 ---640*480
+	/** 800*600 */
+	public static final byte	RESOLUTION_800_600			= 3;				// 分辨率 ---800*600
+	/** 1024*768 */
+	public static final byte	RESOLUTION_1024_768			= 4;				// 分辨率 ---1024*768
+	/** 176*144[QCIF] */
+	public static final byte	RESOLUTION_QCIF_176_144		= 5;				// 分辨率 ---176*144[QCIF]
+	/** 352*288[CIF] */
+	public static final byte	RESOLUTION_CIF_352_288		= 6;				// 分辨率 ---352*288[CIF]
+	/** 704*288[HALF D1] */
+	public static final byte	RESOLUTION_HALF_D1_704_288	= 7;				// 分辨率 ---704*288[HALF D1]
+	/** 704*576[D1] */
+	public static final byte	RESOLUTION_D1_704_576		= 8;				// 分辨率 ---704*576[D1]
+
+	private byte				channelID;										// 通道ID
+	private short				shotCommand;									// 拍摄命令
+	private short				shotInterval;									// 拍照间隔/录像时间
+	private byte				saveSign;										// 保存标志
+	private byte				resolution;									// 分辨率
+	private byte				quality;										// 图像/视频质量
+	private byte				lighteness;									// 亮度
+	private byte				contrast;										// 对比度
+	private byte				saturation;									// 饱和度
+	private byte				chroma;										// 色度
+
+	public ShootCommandMessage(String mobileNum, String messageKey, byte channelId, short shotCommand, short shotInterval, byte saveSign,
+			byte resolution, byte quality, byte lightness, byte contrast, byte saturation, byte chroma) {
+
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setChannelID(channelId);
+		this.setShotCommand(shotCommand);
+		this.setShotInterval(shotInterval);
+		this.setSaveSign(saveSign);
+		this.setResolution(resolution);
+		this.setQuality(quality);
+		this.setLighteness(lightness);
+		this.setContrast(contrast);
+		this.setSaturation(saturation);
+		this.setChroma(chroma);
+		this.setCommand(MessageCommands.Server_Shoot_Command);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_shot_immedi);
+		JT808MsgBody_0x8801 body_0x8801 = new JT808MsgBody_0x8801();
+		body_0x8801.setChannelID(this.getChannelID());
+		body_0x8801.setShotCommand(this.getShotCommand());
+		body_0x8801.setShotInterval(this.getShotInterval());
+		body_0x8801.setSaveSign(this.getSaveSign());
+		body_0x8801.setResolution(this.getResolution());
+		body_0x8801.setQuality(this.getQuality());
+		body_0x8801.setLighteness(this.getLighteness());
+		body_0x8801.setContrast(this.getContrast());
+		body_0x8801.setSaturation(this.getSaturation());
+		body_0x8801.setChroma(this.getChroma());
+		body_0x8801.bulidBody();
+		pack.setMsgBody(body_0x8801);
+		pack.setMsgBody(body_0x8801.getBodyBuffer());
+		pack.setMobileNum(this.getMobileNum());
+		pack.setSequenceNum(0);
+
+		return pack;
+	}
+
+	public byte getChannelID() {
+		return channelID;
+	}
+
+	/** 拍摄通道 */
+	public void setChannelID(byte channelID) {
+		this.channelID = channelID;
+	}
+
+	public short getShotCommand() {
+		return shotCommand;
+	}
+
+	/** 拍摄命令 */
+	public void setShotCommand(short shotCommand) {
+		this.shotCommand = shotCommand;
+	}
+
+	public short getShotInterval() {
+		return shotInterval;
+	}
+
+	/** 拍摄间隔 */
+	public void setShotInterval(short shotInterval) {
+		this.shotInterval = shotInterval;
+	}
+
+	public byte getSaveSign() {
+		return saveSign;
+	}
+
+	/** 保存方式 */
+	public void setSaveSign(byte saveSign) {
+		this.saveSign = saveSign;
+	}
+
+	public byte getResolution() {
+		return resolution;
+	}
+
+	/** 分辨率 */
+	public void setResolution(byte resolution) {
+		this.resolution = resolution;
+	}
+
+	public byte getQuality() {
+		return quality;
+	}
+
+	/** 质量 1~10 */
+	public void setQuality(byte quality) {
+		this.quality = quality;
+	}
+
+	public byte getLighteness() {
+		return lighteness;
+	}
+
+	/** 亮度 */
+	public void setLighteness(byte lighteness) {
+		this.lighteness = lighteness;
+	}
+
+	public byte getContrast() {
+		return contrast;
+	}
+
+	/** 对比度 */
+	public void setContrast(byte contrast) {
+		this.contrast = contrast;
+	}
+
+	public byte getSaturation() {
+		return saturation;
+	}
+
+	/** 饱和度 */
+	public void setSaturation(byte saturation) {
+		this.saturation = saturation;
+	}
+
+	public byte getChroma() {
+		return chroma;
+	}
+
+	/** 色度 */
+	public void setChroma(byte chroma) {
+		this.chroma = chroma;
+	}
+
+}

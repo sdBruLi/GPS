@@ -1,0 +1,8 @@
+package com.china317.emmp.jtt808Gateway.server.processor;
+
+import com.china317.core.base.AbstractDataPacket;
+import com.china317.core.processor.AbstractProcessor;
+
+public abstract class JT808BaseProcessor extends AbstractProcessor<AbstractDataPacket> {
+
+}

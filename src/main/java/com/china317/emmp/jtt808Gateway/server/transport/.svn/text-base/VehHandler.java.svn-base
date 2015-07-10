@@ -1,0 +1,153 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0201;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8001;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8100;
+import com.china317.core.distributor.DistributorHandlerAdapter;
+import com.china317.emmp.jtt808Gateway.Constants;
+import com.china317.emmp.jtt808Gateway.server.Container.DistributeClientContainer;
+import com.china317.emmp.jtt808Gateway.server.processor.Gateway2VehProcessor;
+
+public class VehHandler extends DistributorHandlerAdapter {
+	private final static Log log = LogFactory.getLog(VehHandler.class);
+
+	@Override
+	public void sessionOpened(IoSession session) throws Exception {
+		// TODO Auto-generated method stub
+		log.info("open session id:" + session.getId()+","+session.getRemoteAddress().toString());
+		SessionTimeoutManager.getInstance().putSession(session);
+		super.sessionOpened(session);
+	}
+
+	@Override
+	public void exceptionCaught(IoSession session, Throwable arg1)
+			throws Exception {
+//		log.error("socket closed by client");
+		super.exceptionCaught(session, arg1);
+//		SessionTimeoutManager.getInstance().removeSession(session.getId());
+		super.sessionClosed(session);
+		Gateway2VehProcessor.removeAuth(session.getId());
+	}
+
+	@Override
+	public void messageReceived(IoSession session, Object message)
+			throws Exception {
+		log.debug("veh Handler...");
+		if (message instanceof UnitPackJT808) {
+			UnitPackJT808 pack = (UnitPackJT808) message;
+			SessionTimeoutManager.getInstance().updSessionLastTime(session,
+					pack.getMobileNum());
+			if (pack.isCRCResult()) {
+				// 向所有转发线程缓存压数据
+				DistributeClientContainer.offerData(pack);
+				
+				log.debug("received(" + session.getRemoteAddress()
+						+ ") sessionid=" + session.getId() + ", "
+						+ pack.toString(2) + "");
+				int msgid = pack.getMsgID();
+
+				switch (msgid) {
+				case JT808MsgId.MSGID_CLIENT_register:
+					/** 不做注册、鉴权时 直接返回成功*/
+					if (!Constants.NEED_AUTHENTICATION) {
+						session.write(JT808MsgBody_0x8100
+								.createRegisterResponsePack(
+										pack.getMobileNum(), (byte) 0, pack
+												.getSequenceNum(),
+										"123456789001"));
+					}
+					break;
+				case JT808MsgId.MSGID_CLIENT_deregister:
+					session.write(JT808MsgBody_0x8001
+							.getCommonResponseOK(pack));
+					break;
+				case JT808MsgId.MSGID_CLIENT_authentication:
+					/** 不做注册、鉴权时 直接返回成功*/
+					session.setAttribute("MOBILE_NUM", pack.getMobileNum());
+					if (!Constants.NEED_AUTHENTICATION) {
+						session.write(JT808MsgBody_0x8001
+								.getCommonResponseOK(pack));
+						break;
+					}
+					break;
+				case JT808MsgId.MSGID_CLIENT_position:
+					JT808MsgBody_0x0200 position = (JT808MsgBody_0x0200) pack
+							.getMsgBody();
+					if (position.isAlarm()) {
+						log.debug(pack.getMobileNum()+" position.isAlarm()" +Integer.toBinaryString(position.getAlertSign()));
+					}
+					session.write(JT808MsgBody_0x8001
+							.getCommonResponseOK(pack));
+
+					break;
+				/** modified by Greg 20130117 无此分支会造成主动断开设备的连接（未鉴权时） */
+				case JT808MsgId.MSGID_CLIENT_response_query_position:
+					JT808MsgBody_0x0201 package201 = (JT808MsgBody_0x0201) pack
+							.getMsgBody();
+					if (package201.getPostion().isAlarm()) {
+					}
+					session.write(JT808MsgBody_0x8001
+							.getCommonResponseOK(pack));
+
+					break;
+				/***/
+				default:
+					/** 不做注册、鉴权时 */
+					if (!Constants.NEED_AUTHENTICATION) {
+						session.write(JT808MsgBody_0x8001
+								.getCommonResponseOK(pack));
+						break;
+					}
+					/***/
+					if (Gateway2VehProcessor.verifyAuth(session)) {
+						session.write(JT808MsgBody_0x8001
+								.getCommonResponseOK(pack));
+					} else {
+
+						if (msgid == JT808MsgId.MSGID_CLIENT_multimedia_upload) {
+							session.write(JT808MsgBody_0x8001
+									.getCommonResponseOK(pack));
+							log
+									.info("multimedia_upload_authentication verify ok");
+						} else {
+							session.close(false);
+							log.info("authentication verify error");
+						}
+					}
+					break;
+				}
+
+				// 更新mobileNum与手机号的对应
+				VehSessionManager.getInstance().updVehSessionId(
+						pack.getMobileNum(), session.getId());
+				// 更新缓冲，用于第三方过来的指令下发
+//				VehSessionContainer.addVeh2container(pack.getMobileNum(), session);
+				//换用下面这个：
+				//sessionId = VehSessionManager.getInstance().getVehSessionId(pack.getMobileNum());
+				//VehServer.write(sessionId, pack, false);
+				
+			} else {
+				log.debug("CRC is error , session[" + session.getId()
+						+ "], datas :" + pack);
+			}
+			// log.info("The message received is [" +
+			// unit.getBuffer().getHexDump() + "]");
+		}
+		super.messageReceived(session, message);
+	}
+
+	@Override
+	public void sessionClosed(IoSession session) throws Exception {
+		Gateway2VehProcessor.removeAuth(session.getId());
+//		SessionTimeoutManager.getInstance().removeSession(session.getId());
+		super.sessionClosed(session);
+	}
+
+}

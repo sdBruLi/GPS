@@ -1,0 +1,107 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+import com.china317.emmp.jtt808Gateway.center2gateway.codecExt.ObjectDataJT808;
+
+public class DriverRecordData extends ObjectDataJT808 {
+	private byte commandRecord;
+	
+	private byte[] datas;
+	
+	@Override
+	public String getCommand() {
+		return MessageCommands.client_Driving_Record;
+	}
+	public Object getRecord() throws Exception{
+		datas = this.getBytes();
+		int index = 0;
+		int currentIndex = 0;
+		if (datas != null && (datas.length > 2)) {
+			if ((datas[0]) == 0x55 && (datas[1] == 0x7A)) {
+				if (datas.length < 5) {
+					//55 7A 07 00
+					datas = null;
+				} else {
+					int len = (((datas[3] & 0xFF) << 8) + (datas[4] & 0xFF)) & 0xFFFF; 
+					if (len > 0) {
+						byte[] datas2 = new byte[len];
+						System.arraycopy(datas, 6, datas2, 0, len);
+						datas = datas2;
+					} else {
+						datas = null;
+					}
+				}
+				
+			}
+		}
+		
+		if ((datas != null) && (datas.length > 0)) {
+			index = datas.length;
+			switch (commandRecord) {
+			case 0x01:
+				DriverCodeLicenseNum driverCodeLicenseNum = new DriverCodeLicenseNum();
+				driverCodeLicenseNum.parse(datas);
+				return driverCodeLicenseNum;
+			case 0x02:
+				TerminalRealtime teminalRealtime = new TerminalRealtime();
+				teminalRealtime.parse(datas);
+				return teminalRealtime;
+			case 0x03:
+				TotalMileage totalMileage = new TotalMileage();
+				totalMileage.parse(datas);
+				return totalMileage;
+			case 0x04:
+				VehCharacteristicCoefficients cc = new VehCharacteristicCoefficients();
+				cc.parse(datas);
+				return cc;
+			case 0x05:
+				SpeedBlock360h speedBlock360h = new SpeedBlock360h();
+				speedBlock360h.parse(datas);
+				return speedBlock360h;
+			case 0x06:
+				VehInfo vehInfo = new VehInfo();
+				vehInfo.parse(datas);
+				return vehInfo;
+			case 0x07:
+				List<AccidentDoubtfulPoint> points = new ArrayList<AccidentDoubtfulPoint>();
+				do {
+					AccidentDoubtfulPoint accidentDoubtfulPoint = new AccidentDoubtfulPoint();
+					currentIndex = accidentDoubtfulPoint.parse(currentIndex, datas);
+					points.add(accidentDoubtfulPoint);
+				} while ((index - currentIndex) > 0);
+				return points;
+			case 0x08:
+				TotalMileage totalMileage2d = new TotalMileage();
+				totalMileage2d.parse(datas);
+				return totalMileage2d;
+			case 0x09:
+				SpeedBlock360h speedBlock360h2d = new SpeedBlock360h();
+				speedBlock360h2d.parse(datas);
+				return speedBlock360h2d;
+			case 0x11:
+				DriverOvertimeRecord overtimeRecord = new DriverOvertimeRecord();
+				overtimeRecord.parse(datas);
+				return overtimeRecord;
+			}
+		}
+		return null;
+	}
+	public byte getCommandRecord() {
+		return commandRecord;
+	}
+	
+	public void setCommandRecord(byte commandRecord) {
+		this.commandRecord = commandRecord;
+	}
+	
+	public byte[] getDatas() {
+		return datas;
+	}
+	
+	public void setDatas(byte[] datas) {
+		this.datas = datas;
+	}
+}

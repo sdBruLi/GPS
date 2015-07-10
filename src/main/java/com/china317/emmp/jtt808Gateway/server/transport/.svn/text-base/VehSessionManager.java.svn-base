@@ -1,0 +1,125 @@
+package com.china317.emmp.jtt808Gateway.server.transport;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+public class VehSessionManager {
+	private Log										log				= LogFactory.getLog(VehSessionManager.class);
+	private ConcurrentHashMap<String, VehSession>	vehSessionMap	= new ConcurrentHashMap<String, VehSession>();	// 存储<电话号码,Vehssion>的对应关系
+
+	static class VehSessionManagerHolder {
+		static VehSessionManager	instance	= new VehSessionManager();
+	}
+
+	private static Thread	s;
+
+	public VehSessionManager() {
+		if (s == null) {
+			s=new Thread() {
+				@Override
+				public void run() {
+					while (true) {
+						try {
+							sleep(20000);
+						} catch (Throwable ex) {
+							ex.printStackTrace();
+						}
+						log.info("++++++ ConcurrentHashMap " + vehSessionMap.size());
+					}
+				}
+			};
+			s.start();
+		}
+	}
+
+	public static VehSessionManager getInstance() {
+		return VehSessionManagerHolder.instance;
+	}
+
+	public void updVehSessionId(String mobileNum, long id) {
+		Long currentId = getVehSessionId(mobileNum);
+		if ((currentId == null) || (currentId != id)) {
+			putVehSession(mobileNum, id);
+			log.debug("Upd vehSessionId of VehSessionManager, MobileNum[" + mobileNum + "] sessionId[" + id + "]");
+		}
+	}
+
+	public void putVehSession(String mobileNum, long id) {
+		VehSession vehSession = this.vehSessionMap.get(mobileNum);
+		if (vehSession == null) {
+			this.vehSessionMap.put(mobileNum, new VehSession(id, mobileNum));
+		} else {
+			if (vehSession.sessionId != id) {
+				vehSession.resetSessionId(id, mobileNum);
+			}
+		}
+		clearVehSession();
+	}
+
+	private void clearVehSession() {
+		List<String> keys = null;
+		for (Object o : this.vehSessionMap.keySet()) {
+			VehSession b = this.vehSessionMap.get(o);
+			if (b.isTimeout()) {
+				if (keys == null) {
+					keys = new ArrayList<String>();
+				}
+				keys.add((String) o);
+			}
+		}
+		if (keys != null) {
+			for (String key : keys) {
+				VehSession b = vehSessionMap.remove(key);
+				// session 关闭
+//				SessionTimeoutManager.getInstance().removeSession(b.sessionId);
+				log.info("Remove vehSessionId from VehSessionManager, MobileNum[" + b.mobileNum + "] sessionId[" + b.sessionId + "]");
+			}
+		}
+	}
+
+	public Long getVehSessionId(String mobileNum) {
+		VehSession vehSession = this.vehSessionMap.get(mobileNum);
+		if (vehSession != null) {
+			return vehSession.sessionId;
+		}
+		return null;
+	}
+
+	// public static void main(String[] args) {
+	// VehSessionManager.getInstance().updVehSessionId("123", 1);
+	// }
+
+	//
+	private class VehSession {
+		private long	lastTime;
+		private String	mobileNum;
+		private long	sessionId;
+		private long	TIMEOUT	= 1000 * 60 * 10;	// session超时时间
+
+		public VehSession(long id, String mobileNum) {
+			resetSessionId(id, mobileNum);
+		}
+
+		public void resetSessionId(long id, String mobileNum) {
+			resetTime();
+			this.sessionId = id;
+			this.mobileNum = mobileNum;
+		}
+
+		public void resetTime() {
+			this.lastTime = System.currentTimeMillis();
+		}
+
+		public boolean isTimeout() {
+			// 如果这个session两分钟内都没有更新过数据，表示该session超时
+			if (((System.currentTimeMillis() - this.lastTime) > TIMEOUT)) {
+				return true;
+			}
+			return false;
+		}
+	}
+}

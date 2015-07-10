@@ -1,0 +1,95 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.buffer.IoBuffer;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8900;
+import com.china317.core.codec.jtt808_2011.x8900.F1MsgDataPack;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:透传下发
+ */
+public class TransDownMessage extends BaseDownMessage {
+	private Log			log	= LogFactory.getLog(TransDownMessage.class);
+	private byte		transType;											// 透传消息类型
+	private IoBuffer	dataBlock;											// 透传消息内容
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param transType
+	 *            透传类型
+	 * @param dataBlock
+	 *            数据块 生成数据下行透传协议封装对象
+	 */
+	public TransDownMessage(String mobileNum, String messageKey, byte transType, IoBuffer data) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setTransType(transType);
+		this.setDataBlock(data);
+		this.setCommand(MessageCommands.Server_Trans_Down);
+	}
+
+	public TransDownMessage(String mobileNum, String messageKey, F1MsgDataPack pack) {
+		try {
+			this.setMobileNum(mobileNum);
+			this.setMessageKey(messageKey);
+			this.setTransType(pack.getTypeid());
+			this.setDataBlock(pack.getData());
+			this.setCommand(MessageCommands.Server_Trans_Down);
+		} catch (Exception e) {
+			log.error(e.toString(), e);
+		}
+	}
+	
+	public TransDownMessage(){
+		
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_data_down_trans);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8900 body = new JT808MsgBody_0x8900();
+		body.setTransType(transType);
+		body.setDataBlock(dataBlock);
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public void unpack(UnitPackJT808 pack) {
+		try{
+			JT808MsgBody_0x8900 body = (JT808MsgBody_0x8900)pack.getMsgBody();
+    		this.setTransType(body.getTransType());
+    		this.setDataBlock(body.getDataBlock());
+		}catch(Exception e){
+			log.debug("unpack fail ",e);
+		}
+	}
+	
+	public byte getTransType() {
+		return transType;
+	}
+
+	/** 透传类型 */
+	public void setTransType(byte transType) {
+		this.transType = transType;
+	}
+
+	public IoBuffer getDataBlock() {
+		return dataBlock;
+	}
+
+	/** 数据块 */
+	public void setDataBlock(IoBuffer dataBlock) {
+		this.dataBlock = dataBlock;
+	}
+
+}

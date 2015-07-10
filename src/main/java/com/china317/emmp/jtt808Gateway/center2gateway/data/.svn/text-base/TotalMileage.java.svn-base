@@ -1,0 +1,35 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import com.china317.core.codec.jtt808_2011.util.ByteUtil;
+
+public class TotalMileage {
+	private long mileage;		//km
+	private String time;
+	
+	public long getMileage() {
+		return mileage;
+	}
+	public void setMileage(long mileage) {
+		this.mileage = mileage;
+	}
+	public String getTime() {
+		return time;
+	}
+	public void setTime(String time) {
+		this.time = time;
+	}
+	public void parse(byte[] datas) {
+		String m = "";
+		byte[] ms = new byte[3];
+		System.arraycopy(datas, 0, ms, 0, 3);
+		m = ByteUtil.getHexString(ms);
+		mileage = Long.parseLong(m) * 10;
+		byte[] timebytes = new byte[6];
+		System.arraycopy(datas, 3, timebytes, 0, 5);
+		time = ByteUtil.getHexString(timebytes);
+	}
+	@Override
+	public String toString() {
+		return "time:" + time + " mileage:" + mileage;
+	}
+}

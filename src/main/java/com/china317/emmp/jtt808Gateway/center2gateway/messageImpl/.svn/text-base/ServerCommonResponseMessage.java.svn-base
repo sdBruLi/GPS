@@ -1,0 +1,64 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8001;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:平台通用应答
+ */
+public class ServerCommonResponseMessage extends BaseDownMessage {
+	/**成功*/
+	public static final byte	RESULT_OK				= 0;	// 成功/确认
+	/**失败*/
+	public static final byte	RESULT_FAILURE			= 1;	// 失败
+	/**消息有误*/
+	public static final byte	RESULT_MSG_ERROR		= 2;	// 消息有误
+	/**不支持*/
+	public static final byte	RESULT_NONSUPPORT		= 3;	// 不支持
+	/**报警已确认*/
+	public static final byte	RESULT_ALARM_CONFIRM	= 4;	// 报警处理确认
+	//
+	private int					responseSequenceNum;
+	private int					responseMsgID;
+	private byte				result;
+	
+	public ServerCommonResponseMessage(String mobileNum, String messageKey, 
+			int responseSequenceNum, int responseMsgID, byte result) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setResponseMsgID(responseMsgID);
+		this.setResponseSequenceNum(responseSequenceNum);
+		this.setResult(result);
+		this.setCommand(MessageCommands.Server_Common_Response);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception{
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_response);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8001 body = new JT808MsgBody_0x8001();
+		body.setResponseSequenceNum(responseSequenceNum);
+		body.setResponseMsgID(responseMsgID);
+		body.setResult(result);
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+	/**反馈流水号*/
+	public void setResponseSequenceNum(int responseSequenceNum) {
+		this.responseSequenceNum = responseSequenceNum;
+	}
+	/**反馈消息号*/
+	public void setResponseMsgID(int responseMsgID) {
+		this.responseMsgID = responseMsgID;
+	}
+	/**结果*/
+	public void setResult(byte result) {
+		this.result = result;
+	}
+	
+}

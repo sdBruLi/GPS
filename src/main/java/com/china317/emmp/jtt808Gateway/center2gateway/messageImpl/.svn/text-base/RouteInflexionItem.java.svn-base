@@ -1,0 +1,111 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+public class RouteInflexionItem {
+	
+	private int						inflexionId;				// 拐点ID
+	private int						roadId;						// 路段ID
+	private int						inflexionLatitude;			// 拐点纬度，单位是乘以10的6次方
+	private int						inflexionLongitude;			// 拐点经度
+	private byte					roadWide;					// 路段路宽
+	private InflexionRoadAttri 					roadAttribute;				// 路段属性
+	private short					roadRunOverlength;			// 路段行驶过长阀值
+	private short					roadRunShortness;			// 路段行驶不足阀值
+	private short					maxSpeed;					// 最大速度
+	private byte					overspeedTime;				// 超速持续时间
+
+	public RouteInflexionItem(int inflexionId, int roadId, int inflexionLatitude,
+			int inflexionLongitude, byte roadWide, InflexionRoadAttri roadAttribute, short roadRunOverlength, 
+			short roadRunShortness, short maxSpeed, byte overspeedTime) {
+		this.setInflexionId(inflexionId);
+		this.setRoadId(roadId);
+		this.setInflexionLatitude(inflexionLatitude);
+		this.setInflexionLongitude(inflexionLongitude);
+		this.setRoadWide(roadWide);
+		this.setRoadAttribute(roadAttribute);
+		this.setRoadRunOverlength(roadRunOverlength);
+		this.setRoadRunShortness(roadRunShortness);
+		this.setMaxSpeed(maxSpeed);
+		this.setOverspeedTime(overspeedTime);
+	}
+	
+	public int getInflexionId() {
+		return inflexionId;
+	}
+
+	public void setInflexionId(int inflexionId) {
+		this.inflexionId = inflexionId;
+	}
+
+	public int getRoadId() {
+		return roadId;
+	}
+
+	public void setRoadId(int roadId) {
+		this.roadId = roadId;
+	}
+
+	public int getInflexionLatitude() {
+		return inflexionLatitude;
+	}
+
+	public void setInflexionLatitude(int inflexionLatitude) {
+		this.inflexionLatitude = inflexionLatitude;
+	}
+
+	public int getInflexionLongitude() {
+		return inflexionLongitude;
+	}
+
+	public void setInflexionLongitude(int inflexionLongitude) {
+		this.inflexionLongitude = inflexionLongitude;
+	}
+
+	public byte getRoadWide() {
+		return roadWide;
+	}
+
+	public void setRoadWide(byte roadWide) {
+		this.roadWide = roadWide;
+	}
+
+	public InflexionRoadAttri getRoadAttribute() {
+		return roadAttribute;
+	}
+
+	public void setRoadAttribute(InflexionRoadAttri roadAttribute) {
+		this.roadAttribute = roadAttribute;
+	}
+
+	public short getRoadRunOverlength() {
+		return roadRunOverlength;
+	}
+
+	public void setRoadRunOverlength(short roadRunOverlength) {
+		this.roadRunOverlength = roadRunOverlength;
+	}
+
+	public short getRoadRunShortness() {
+		return roadRunShortness;
+	}
+
+	public void setRoadRunShortness(short roadRunShortness) {
+		this.roadRunShortness = roadRunShortness;
+	}
+
+	public short getMaxSpeed() {
+		return maxSpeed;
+	}
+
+	public void setMaxSpeed(short maxSpeed) {
+		this.maxSpeed = maxSpeed;
+	}
+
+	public byte getOverspeedTime() {
+		return overspeedTime;
+	}
+
+	public void setOverspeedTime(byte overspeedTime) {
+		this.overspeedTime = overspeedTime;
+	}
+	
+}

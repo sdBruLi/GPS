@@ -1,0 +1,54 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8500;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:车辆控制
+ */
+public class VehControlMessage extends BaseDownMessage {
+	/** 车门解锁 */
+	public static final byte	DOOR_UNLOCK	= 0;	// 车门解锁
+	/** 车门加锁 */
+	public static final byte	DOOR_LOCK	= 1;	// 车门加锁
+	//
+	private byte				controlSign;		// 控制标志
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param door
+	 *            车门控制标志 生成车辆控制协议封装对象
+	 * @param messageKey
+	 */
+	public VehControlMessage(String mobileNum, String messageKey, byte controlSign) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setControlSign(controlSign);
+		this.setCommand(MessageCommands.Server_Veh_Control);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_vehicle_control);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8500 body = new JT808MsgBody_0x8500();
+		body.setControlSign(this.getControlSign());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getControlSign() {
+		return controlSign;
+	}
+
+	/** 控制标志 */
+	public void setControlSign(byte controlSign) {
+		this.controlSign = controlSign;
+	}
+
+}

@@ -1,0 +1,67 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8202;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:临时跟踪指令
+ */
+public class TemporaryTraceControlMsg extends BaseDownMessage {
+
+	public static final byte	STOP_TRACE	= 0;	// 停止追踪
+
+	//
+	private short				interval;			// 时间间隔
+	private int					availablePeriod;	// 位置跟踪有效期
+
+	/**
+	 * @param mobileNum
+	 *            手机号
+	 * @param messageKey
+	 * @param interval
+	 *            时间间隔
+	 * @param availablePeriod
+	 *            位置跟踪有效期 生成临时位置跟踪控制查询协议封装对象
+	 */
+	public TemporaryTraceControlMsg(String mobileNum, String messageKey, short interval, int availablePeriod) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setInterval(interval);
+		this.setAvailablePeriod(availablePeriod);
+		this.setCommand(MessageCommands.Server_Temporary_Trace_Control);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_temp_position_track);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8202 body = new JT808MsgBody_0x8202();
+		body.setInterval(this.getInterval());
+		body.setAvailablePeriod(this.getAvailablePeriod());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public short getInterval() {
+		return interval;
+	}
+
+	/** 上报间隔 */
+	public void setInterval(short interval) {
+		this.interval = interval;
+	}
+
+	public int getAvailablePeriod() {
+		return availablePeriod;
+	}
+
+	/** 持续时间 */
+	public void setAvailablePeriod(int availablePeriod) {
+		this.availablePeriod = availablePeriod;
+	}
+
+}

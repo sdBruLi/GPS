@@ -1,0 +1,61 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.io.UnsupportedEncodingException;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+public class DriverCodeLicenseNum {
+	private int driverCode;
+	private String licenseNum;
+	
+	public int getDriverCode() {
+		return driverCode;
+	}
+	public void setDriverCode(int driverCode) {
+		this.driverCode = driverCode;
+	}
+	public String getLicenseNum() {
+		return licenseNum;
+	}
+	public void setLicenseNum(String licenseNum) {
+		this.licenseNum = licenseNum;
+	}
+	
+	public void parse(byte[] datas) {
+		driverCode = ((datas[0] & 0xFF) << 16) + ((datas[1] & 0xFF) << 8) + ((datas[2] & 0xFF));
+		byte[] dests = new byte[datas.length - 3];
+		System.arraycopy(datas, 3, dests, 0, dests.length);
+		try {
+			licenseNum = new String(dests, "GBK");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	public IoBuffer getBuffer() {
+		IoBuffer buf = IoBuffer.allocate(3).setAutoExpand(true);
+		buf.put((byte) ((driverCode >> 16) & 0xFF));
+		buf.put((byte) ((driverCode >> 8) & 0xFF));
+		buf.put((byte) ((driverCode) & 0xFF));
+		try {
+			byte[] dest = this.licenseNum.getBytes("GBK");
+			byte[] dest2 = new byte[18];
+			int length = 18;
+			if (dest.length < 18) {
+				length = dest.length;
+			}
+			System.arraycopy(dest, 0, dest2, 0, length);
+			buf.put(dest2);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		buf.flip();
+		return buf;
+	}
+	@Override
+	public String toString() {
+		return "driverCode : " + driverCode + " licenceNum:" + licenseNum;
+	}
+	
+}

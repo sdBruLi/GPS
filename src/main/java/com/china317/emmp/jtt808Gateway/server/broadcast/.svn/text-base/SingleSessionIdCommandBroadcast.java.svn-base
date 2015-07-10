@@ -1,0 +1,113 @@
+package com.china317.emmp.jtt808Gateway.server.broadcast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.service.IoAcceptor;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.base.AbstractDataPacket;
+import com.china317.core.broadcast.AbstractBroadcast;
+import com.china317.core.codec.jtt808Gateway.GatewayCMD;
+import com.china317.core.codec.jtt808Gateway.GatewayUnitPack;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x8011;
+
+public class SingleSessionIdCommandBroadcast extends AbstractBroadcast{
+	private static final Log 	log 			= LogFactory.getLog(SingleSessionIdCommandBroadcast.class);
+	private Map<Long, Integer> 	sequenceNums 	= new HashMap<Long, Integer>();
+	private String 				messageId		= "";
+	private IoSession			gatewaySession  = null;
+	private boolean				isProcess		= false;
+	private boolean				isSuccess		= false;
+
+	public SingleSessionIdCommandBroadcast(int maxRetryCount, int retryPeriod,
+			AbstractDataPacket dataPacket, boolean hasResponse,
+			IoAcceptor accptor) {
+		super(maxRetryCount, retryPeriod, dataPacket, hasResponse, accptor);
+	}
+
+	public void addSession(long sessionId, int sequence) {
+		this.sequenceNums.put(sessionId, sequence);
+		long[] sessionIds = {sessionId};
+		super.addSessions(sessionIds);
+		log.info("sessionId[" + sessionId + "] 's sequence number[" + sequence + "] send to monitor...");
+	}
+	
+	public boolean isExist(long sessionId, int sequence) {
+		boolean exist = false;
+		if ((sequenceNums.get(sessionId) != null) && (sequenceNums.get(sessionId) == sequence) ) {
+			super.responseMessageReceived(sessionId);
+			exist = true;
+			log.info("sessionId[" + sessionId + "] 's sequence number[" + sequence + "] response from monitor...");
+		}
+		return exist;
+	}
+
+	public String getMessageId() {
+		return messageId;
+	}
+
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
+	}
+
+	public void setGatewaySession(IoSession session2) {
+		gatewaySession = session2;
+	}
+
+	public void sendAckMessageId(long sessionId, byte resultAck) {
+		int sequenceNum = 0;
+		if (sequenceNums.get(sessionId) != null) {
+			sequenceNum = sequenceNums.get(sessionId).intValue();
+		}
+		GatewayUnitPack receiveUnit = new GatewayUnitPack(GatewayCMD.RECEIVE_TRANS_VEH_MSG_RESPONSE);
+		receiveUnit.setSequenceNum(0);
+		GatewayBody_0x8011 gbody = new GatewayBody_0x8011();
+		gbody.setMessageId(messageId);
+		gbody.setSessionid(sessionId+"");
+		gbody.setStatus(resultAck);
+		gbody.setSequenceNum(sequenceNum);
+		try {
+			receiveUnit.setMsgBody(gbody);
+			this.gatewaySession.write(receiveUnit);
+		} catch (Exception e) {
+			log.error("",e);
+		}  
+	}
+
+	@Override
+	public void process() {
+		if (!isProcess){
+			log.debug("into AbstractBroadcast process...");
+			List<Long> sucessedSessions = new ArrayList<Long>();
+			sucessedSessions.addAll(this.getSuccessedSessions().keySet());
+			log.debug("sucessedSessions size is " + sucessedSessions.size());
+			for (Long sessionId : sucessedSessions){
+				byte result = GatewayBody_0x8011.RESULT_ACK_OK;
+				if (!isSuccess) {
+					result = GatewayBody_0x8011.RESULT_ACK_FAILED;
+				}
+				sendAckMessageId(sessionId, result);
+				log.debug("send sucessed ack messageis from AbstractBroadcast process:" + sessionId + ":" + messageId + ":"+result);
+			}
+			
+			List<Long> failedSessions = new ArrayList<Long>();
+			failedSessions.addAll(this.getFailedSessions().keySet());
+			log.debug("failedSessions size is " + failedSessions.size());
+			for (Long sessionId : failedSessions){
+				sendAckMessageId(sessionId, GatewayBody_0x8011.RESULT_FAILURE);
+				log.debug("send failed ack messageis from AbstractBroadcast process:" + sessionId + ":" + messageId + ":"+GatewayBody_0x8011.RESULT_FAILURE);
+			}
+		}
+		isProcess = true;
+	}
+
+	public void setSuccess(boolean isSuccess) {
+		this.isSuccess = isSuccess;
+	}
+	
+}

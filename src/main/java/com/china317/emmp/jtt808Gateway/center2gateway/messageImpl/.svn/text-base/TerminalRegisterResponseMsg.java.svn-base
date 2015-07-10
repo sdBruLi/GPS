@@ -1,0 +1,77 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8100;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:终端注册应答
+ */
+public class TerminalRegisterResponseMsg extends BaseDownMessage {
+	/** 成功 */
+	public static final byte	RESULT_OK						= 0;	// 成功
+	/** 车辆已被注册 */
+	public static final byte	RESULT_VEH_HAS_REGISTERED		= 1;	// 车辆已被注册
+	/** 数据库中无该车 */
+	public static final byte	RESULT_DATABASE_NO_VEH			= 2;	// 数据库中无该车
+	/** 终端已被注册 */
+	public static final byte	RESULT_TERMINAL_HAS_REGISTERED	= 3;	// 终端已被注册
+	/** 数据库中无该终端 */
+	public static final byte	RESULT_DATABASE_NO_TERMINAL		= 4;	// 数据库中无该终端
+	//
+	private int					responseSequenceNum;
+	private byte				result;
+	private String				authCode;
+
+	public TerminalRegisterResponseMsg(String mobileNum, String messageKey, int responseSequenceNum, int responseMsgID, byte result, String authCode) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setResponseSequenceNum(responseSequenceNum);
+		this.setResult(result);
+		this.setAuthCode(authCode);
+		this.setCommand(MessageCommands.Server_response_register);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_response_register);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8100 body = new JT808MsgBody_0x8100();
+		body.setResponseSequenceNum(this.getResponseSequenceNum());
+		body.setResult(this.getResult());
+		body.setAuthCode(this.getAuthCode());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public int getResponseSequenceNum() {
+		return responseSequenceNum;
+	}
+
+	/** 应答流水 */
+	public void setResponseSequenceNum(int responseSequenceNum) {
+		this.responseSequenceNum = responseSequenceNum;
+	}
+
+	public byte getResult() {
+		return result;
+	}
+
+	/** 结果 */
+	public void setResult(byte result) {
+		this.result = result;
+	}
+
+	public String getAuthCode() {
+		return authCode;
+	}
+
+	/** 鉴权码 */
+	public void setAuthCode(String authCode) {
+		this.authCode = authCode;
+	}
+
+}

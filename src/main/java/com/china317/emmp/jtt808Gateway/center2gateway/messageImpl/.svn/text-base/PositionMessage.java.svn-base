@@ -1,0 +1,756 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_alarmId_ack;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_in_out_alarm;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_mileage;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_oilMass;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_overspeed_alarm;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_runTime_alarm;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_sensorSpeed;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0200_item_temperature;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+import com.china317.emmp.jtt808Gateway.server.common.UtilTime;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:位置信息
+ */
+public class PositionMessage extends BaseUpMessage {
+	private static final Log	log					= LogFactory.getLog(PositionMessage.class);
+	private double				latitude;
+	private double				longitude;
+	private short				altitude;
+	private float				speed;
+	private short				direction;
+	private Date				time;
+
+	private byte				emergencyAlarm;
+	private byte				overspeedAlarm;
+	private byte				fatigueDrivingAlarm;
+	private byte				earlyAlarm;
+	private byte				gnnsErrorAlarm;
+	private byte				gnnsBreakAlarm;
+	private byte				gnnsShortAlarm;
+	private byte				undervoltageAlarm;												// 欠压
+	private byte				powerdownAlarm;												// 掉电
+	private byte				screemErrorAlarm;
+	private byte				ttsAlarm;
+	private byte				cameraAlarm;
+	private byte				turnOverSpeedAlarm;											// 北斗项目扩展 ，转弯超速报警
+	private byte				hardBrakingAlarm;												// 北斗项目扩展，急刹车报警
+	private byte				drivingOvertimeAlarm;
+	private byte				packingOvertimeAlarm;
+	private byte				enterRegionAlarm;												// 1:进区域报警；2:出区域报警；
+	private byte				enterLineAlarm;												// 1:进路段报警；2:出路段报警；
+	private byte				lineTimeAlarm;													// 1:行驶时间不足报警；2:行驶时间过长报警；
+	private byte				deviateAlarm;
+	private byte				vssAlarm;
+	private byte				oilAlarm;
+	private byte				stolenAlarm;
+	private byte				fireAlarm;
+	private byte				shiftAlarm;
+	private byte				turneOverAlarm;
+
+	private Byte				accStatus;//0关 1开
+	private Byte				locationStatus;
+	private Byte				latitudeStatus;
+	private Byte				longitudeStatus;
+	private Byte				runingStatus;
+	private Byte				encipherStatus;
+	private Byte				gpsStatus;														// 北斗项目扩展，0：GPS或GPS北斗混合信号；1：北斗信号
+	private Byte				oilStatus;
+	private Byte				powerStatus;
+	private Byte				doorStatus;
+
+	private double				mileage;
+	private float				oilMass;
+	private float				sensorSpeed;
+	private short				alarmId;
+
+	private Byte				overspeedRegionType;											// 0:无特定位置；1:圆形区域；2:矩形区域；3:多边形区域；4:路段
+	private int					overspeedRegionId;
+	private Byte				ioRegionType;													// 1:圆形区域；2:矩形区域；3:多边形区域；4:路段
+	private int					ioRegionId;
+	private Byte				ioRegion;														// 进出区域/路段的方向：0,进；1,出；
+	private int					drivingTimeRegionId;
+	private short				drivingTime;
+	private Byte				drivingTimeResult	= 0;
+
+	private Float				carriageTemperature1;											// 0x14 冷冻温度
+	private Float				carriageTemperature2;											// 0x15 冷藏温度
+
+	public PositionMessage() {
+		this.setCommand(MessageCommands.Client_Position);
+	}
+
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		this.unpackHeadPart(pack);
+		try {
+			JT808MsgBody_0x0200 body = (JT808MsgBody_0x0200) pack.getMsgBody();
+			unpackBody(body);
+		} catch (Exception e) {
+			log.debug("unpack fail ", e);
+		}
+	}
+
+	public void unpackBody(JT808MsgBody_0x0200 body) {
+		this.setLatitude(((double) body.getLatitude()) / 1000000);
+		this.setLongitude(((double) body.getLangitude()) / 1000000);
+		this.setSpeed(((float) body.getSpeed()) / 10);
+		this.setDirection(body.getDirection());
+		if (body.getTime() != null && (!"".equals(body.getTime()))) {
+			this.setTime(UtilTime.parse2Date(body.getTime(), "yyMMddHHmmss"));
+		}
+
+		if (body.getItems() != null) {
+			for (JT808MsgBody_0x0200_item item : body.getItems()) {
+				switch (item.getId()) {
+					case 0x01:
+						JT808MsgBody_0x0200_item_mileage itemMileage = (JT808MsgBody_0x0200_item_mileage) item.getItemInfo();
+						if (itemMileage != null) {
+							mileage = ((double) itemMileage.getMileage()) / 10;
+						}
+						break;
+					case 0x02:
+						JT808MsgBody_0x0200_item_oilMass itemOilMass = (JT808MsgBody_0x0200_item_oilMass) item.getItemInfo();
+						if (itemOilMass != null) {
+							oilMass = ((float) itemOilMass.getOilMass()) / 10;
+						}
+						break;
+					case 0x03:
+						JT808MsgBody_0x0200_item_sensorSpeed itemSensorSpeed = (JT808MsgBody_0x0200_item_sensorSpeed) item.getItemInfo();
+						if (itemSensorSpeed != null) {
+							sensorSpeed = ((float) itemSensorSpeed.getSensorSpeed()) / 10;
+						}
+						break;
+					case 0x04:
+						JT808MsgBody_0x0200_item_alarmId_ack itemAlarmId = (JT808MsgBody_0x0200_item_alarmId_ack) item.getItemInfo();
+						if (itemAlarmId != null) {
+							alarmId = itemAlarmId.getAlarmId();
+						}
+						break;
+					case 0x11:
+						JT808MsgBody_0x0200_item_overspeed_alarm itemOverSpeedAlarm = (JT808MsgBody_0x0200_item_overspeed_alarm) item.getItemInfo();
+						if (itemOverSpeedAlarm != null) {
+							overspeedRegionType = itemOverSpeedAlarm.getPositonType();
+							overspeedRegionId = itemOverSpeedAlarm.getRegionId();
+						}
+						break;
+					case 0x12:
+						JT808MsgBody_0x0200_item_in_out_alarm itemInOutAlarm = (JT808MsgBody_0x0200_item_in_out_alarm) item.getItemInfo();
+						if (itemInOutAlarm != null) {
+							ioRegionType = itemInOutAlarm.getPositonType();
+							ioRegionId = itemInOutAlarm.getRegionId();
+							ioRegion = itemInOutAlarm.getDirection();
+						}
+						break;
+					case 0x13:
+						JT808MsgBody_0x0200_item_runTime_alarm itemRunTimeAlarm = (JT808MsgBody_0x0200_item_runTime_alarm) item.getItemInfo();
+						if (itemRunTimeAlarm != null) {
+							drivingTimeRegionId = itemRunTimeAlarm.getRegionId();
+							drivingTime = itemRunTimeAlarm.getRunTime();
+							drivingTimeResult = itemRunTimeAlarm.getResult();
+						}
+						break;
+					case 0x14:
+						JT808MsgBody_0x0200_item_temperature t1 = (JT808MsgBody_0x0200_item_temperature) item.getItemInfo();
+						if (t1 != null) {
+							if (t1.getSign() == 255) {
+								this.carriageTemperature1 = 0 - (t1.getTemperature() / 100);
+							} else {
+								this.carriageTemperature1 = t1.getTemperature() / 100;
+							}
+						}
+
+						break;
+					case 0x15:
+						JT808MsgBody_0x0200_item_temperature t2 = (JT808MsgBody_0x0200_item_temperature) item.getItemInfo();
+						if (t2 != null) {
+							if (t2.getSign() == 255) {
+								this.carriageTemperature2 = 0 - (t2.getTemperature() / 100);
+							} else {
+								this.carriageTemperature2 = t2.getTemperature() / 100;
+							}
+
+						}
+						break;
+				}
+			}
+		}
+
+		// 报警位分析
+		int alertSign = body.getAlertSign();
+		if ((alertSign & 0x01) == 1) {
+			this.setEmergencyAlarm((byte) 1);
+		}
+		if (((alertSign >> 1) & 0x01) == 1) {
+			this.setOverspeedAlarm((byte) 1);
+			// vehPackage.setOverspeedRegionType(overspeedRegionType);
+			// vehPackage.setOverspeedRegionId(overspeedRegionId + "");
+		}
+		if (((alertSign >> 2) & 0x01) == 1) {
+			this.setFatigueDrivingAlarm((byte) 1);
+		}
+		if (((alertSign >> 3) & 0x01) == 1) {
+			this.setEarlyAlarm((byte) 1);
+		}
+		if (((alertSign >> 4) & 0x01) == 1) {
+			this.setGnnsErrorAlarm((byte) 1);
+		}
+		if (((alertSign >> 5) & 0x01) == 1) {
+			this.setGnnsBreakAlarm((byte) 1);
+		}
+		if (((alertSign >> 6) & 0x01) == 1) {
+			this.setGnnsShortAlarm((byte) 1);
+		}
+		if (((alertSign >> 7) & 0x01) == 1) {
+			this.setUndervoltageAlarm((byte) 1);
+		}
+		if (((alertSign >> 8) & 0x01) == 1) {
+			this.setPowerdownAlarm((byte) 1);
+		}
+		if (((alertSign >> 9) & 0x01) == 1) {
+			this.setScreemErrorAlarm((byte) 1);
+		}
+		if (((alertSign >> 10) & 0x01) == 1) {
+			this.setTtsAlarm((byte) 1);
+		}
+		if (((alertSign >> 11) & 0x01) == 1) {
+			this.setCameraAlarm((byte) 1);
+		}
+		if (((alertSign >> 12) & 0x01) == 1) {
+			this.setTurnOverSpeedAlarm((byte) 1);
+		}
+		if (((alertSign >> 13) & 0x01) == 1) {
+			this.setHardBrakingAlarm((byte) 1);
+		}
+		if (((alertSign >> 18) & 0x01) == 1) {
+			this.setDrivingOvertimeAlarm((byte) 1);
+		}
+		if (((alertSign >> 19) & 0x01) == 1) {
+			this.setPackingOvertimeAlarm((byte) 1);
+		}
+
+		if (((alertSign >> 20) & 0x01) == 1) {
+			if (ioRegion == 0) {
+				enterRegionAlarm = (byte) 1;
+			} else {
+				enterRegionAlarm = (byte) 2;
+			}
+			// vehPackage.setEnterRegionId(ioRegionId + "");
+			// vehPackage.setEnterRegionType((byte) ioRegionType);
+		}
+		if (((alertSign >> 21) & 0x01) == 1) {
+			if (ioRegion == 0) {
+				enterLineAlarm = (byte) 1;
+			} else {
+				enterLineAlarm = (byte) 2;
+			}
+			// vehPackage.setEnterRegionId(ioRegionId + "");
+			// vehPackage.setEnterRegionType((byte) ioRegionType);
+		}
+		if (((alertSign >> 22) & 0x01) == 1) {
+			if (drivingTimeResult == 0) {
+				lineTimeAlarm = (byte) 1;
+			} else {
+				lineTimeAlarm = (byte) 2;
+			}
+			// vehPackage.setLineDrivingTime((long) drivingTime);
+			// vehPackage.setLineId(drivingTimeRegionId);
+		}
+		if (((alertSign >> 23) & 0x01) == 1) {
+			this.setDeviateAlarm((byte) 1);
+		}
+		if (((alertSign >> 24) & 0x01) == 1) {
+			this.setVssAlarm((byte) 1);
+		}
+		if (((alertSign >> 25) & 0x01) == 1) {
+			this.setOilAlarm((byte) 1);
+		}
+		if (((alertSign >> 26) & 0x01) == 1) {
+			this.setStolenAlarm((byte) 1);
+		}
+		if (((alertSign >> 27) & 0x01) == 1) {
+			this.setFireAlarm((byte) 1);
+		}
+		if (((alertSign >> 28) & 0x01) == 1) {
+			this.setShiftAlarm((byte) 1);
+		}
+		if (((alertSign >> 29) & 0x01) == 1) {
+			this.setTurneOverAlarm((byte) 1);
+		}
+
+		// 状态位分析
+		int status = body.getStatus();
+		this.setAccStatus((byte) (status & 1));
+		this.setLocationStatus((byte) (status >> 1 & 1));
+		this.setLatitudeStatus((byte) (status >> 2 & 1));
+		this.setLongitudeStatus((byte) (status >> 3 & 1));
+		this.setRuningStatus((byte) (status >> 4 & 1));
+		this.setEncipherStatus((byte) (status >> 5 & 1));
+		this.setGpsStatus((byte) (status >> 6 & 1));
+		this.setOilStatus((byte) (status >> 10 & 1));
+		this.setPowerStatus((byte) (status >> 11 & 1));
+		this.setDoorStatus((byte) (status >> 12 & 1));
+
+	}
+
+	public Byte getGpsStatus() {
+		return gpsStatus;
+	}
+
+	public void setGpsStatus(Byte gpsStatus) {
+		this.gpsStatus = gpsStatus;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(double latitude) {
+		this.latitude = latitude;
+	}
+
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(double longitude) {
+		this.longitude = longitude;
+	}
+
+	public short getAltitude() {
+		return altitude;
+	}
+
+	public void setAltitude(short altitude) {
+		this.altitude = altitude;
+	}
+
+	public float getSpeed() {
+		return speed;
+	}
+
+	public void setSpeed(float speed) {
+		this.speed = speed;
+	}
+
+	public short getDirection() {
+		return direction;
+	}
+
+	public void setDirection(short direction) {
+		this.direction = direction;
+	}
+
+	public Date getTime() {
+		return time;
+	}
+
+	public void setTime(Date time) {
+		this.time = time;
+	}
+
+	public byte getEmergencyAlarm() {
+		return emergencyAlarm;
+	}
+
+	public void setEmergencyAlarm(byte emergencyAlarm) {
+		this.emergencyAlarm = emergencyAlarm;
+	}
+
+	public byte getOverspeedAlarm() {
+		return overspeedAlarm;
+	}
+
+	public void setOverspeedAlarm(byte overspeedAlarm) {
+		this.overspeedAlarm = overspeedAlarm;
+	}
+
+	public byte getFatigueDrivingAlarm() {
+		return fatigueDrivingAlarm;
+	}
+
+	public void setFatigueDrivingAlarm(byte fatigueDrivingAlarm) {
+		this.fatigueDrivingAlarm = fatigueDrivingAlarm;
+	}
+
+	public byte getEarlyAlarm() {
+		return earlyAlarm;
+	}
+
+	public void setEarlyAlarm(byte earlyAlarm) {
+		this.earlyAlarm = earlyAlarm;
+	}
+
+	public byte getGnnsErrorAlarm() {
+		return gnnsErrorAlarm;
+	}
+
+	public void setGnnsErrorAlarm(byte gnnsErrorAlarm) {
+		this.gnnsErrorAlarm = gnnsErrorAlarm;
+	}
+
+	public byte getGnnsBreakAlarm() {
+		return gnnsBreakAlarm;
+	}
+
+	public void setGnnsBreakAlarm(byte gnnsBreakAlarm) {
+		this.gnnsBreakAlarm = gnnsBreakAlarm;
+	}
+
+	public byte getGnnsShortAlarm() {
+		return gnnsShortAlarm;
+	}
+
+	public void setGnnsShortAlarm(byte gnnsShortAlarm) {
+		this.gnnsShortAlarm = gnnsShortAlarm;
+	}
+
+	public byte getUndervoltageAlarm() {
+		return undervoltageAlarm;
+	}
+
+	public void setUndervoltageAlarm(byte undervoltageAlarm) {
+		this.undervoltageAlarm = undervoltageAlarm;
+	}
+
+	public byte getPowerdownAlarm() {
+		return powerdownAlarm;
+	}
+
+	public void setPowerdownAlarm(byte powerdownAlarm) {
+		this.powerdownAlarm = powerdownAlarm;
+	}
+
+	public byte getScreemErrorAlarm() {
+		return screemErrorAlarm;
+	}
+
+	public void setScreemErrorAlarm(byte screemErrorAlarm) {
+		this.screemErrorAlarm = screemErrorAlarm;
+	}
+
+	public byte getTtsAlarm() {
+		return ttsAlarm;
+	}
+
+	public void setTtsAlarm(byte ttsAlarm) {
+		this.ttsAlarm = ttsAlarm;
+	}
+
+	public byte getCameraAlarm() {
+		return cameraAlarm;
+	}
+
+	public void setCameraAlarm(byte cameraAlarm) {
+		this.cameraAlarm = cameraAlarm;
+	}
+
+	public byte getDrivingOvertimeAlarm() {
+		return drivingOvertimeAlarm;
+	}
+
+	public void setDrivingOvertimeAlarm(byte drivingOvertimeAlarm) {
+		this.drivingOvertimeAlarm = drivingOvertimeAlarm;
+	}
+
+	public byte getPackingOvertimeAlarm() {
+		return packingOvertimeAlarm;
+	}
+
+	public void setPackingOvertimeAlarm(byte packingOvertimeAlarm) {
+		this.packingOvertimeAlarm = packingOvertimeAlarm;
+	}
+
+	public byte getEnterRegionAlarm() {
+		return enterRegionAlarm;
+	}
+
+	public void setEnterRegionAlarm(byte enterRegionAlarm) {
+		this.enterRegionAlarm = enterRegionAlarm;
+	}
+
+	public byte getEnterLineAlarm() {
+		return enterLineAlarm;
+	}
+
+	public void setEnterLineAlarm(byte enterLineAlarm) {
+		this.enterLineAlarm = enterLineAlarm;
+	}
+
+	public byte getLineTimeAlarm() {
+		return lineTimeAlarm;
+	}
+
+	public void setLineTimeAlarm(byte lineTimeAlarm) {
+		this.lineTimeAlarm = lineTimeAlarm;
+	}
+
+	public byte getDeviateAlarm() {
+		return deviateAlarm;
+	}
+
+	public void setDeviateAlarm(byte deviateAlarm) {
+		this.deviateAlarm = deviateAlarm;
+	}
+
+	public byte getVssAlarm() {
+		return vssAlarm;
+	}
+
+	public void setVssAlarm(byte vssAlarm) {
+		this.vssAlarm = vssAlarm;
+	}
+
+	public byte getOilAlarm() {
+		return oilAlarm;
+	}
+
+	public void setOilAlarm(byte oilAlarm) {
+		this.oilAlarm = oilAlarm;
+	}
+
+	public byte getStolenAlarm() {
+		return stolenAlarm;
+	}
+
+	public void setStolenAlarm(byte stolenAlarm) {
+		this.stolenAlarm = stolenAlarm;
+	}
+
+	public byte getFireAlarm() {
+		return fireAlarm;
+	}
+
+	public void setFireAlarm(byte fireAlarm) {
+		this.fireAlarm = fireAlarm;
+	}
+
+	public byte getShiftAlarm() {
+		return shiftAlarm;
+	}
+
+	public void setShiftAlarm(byte shiftAlarm) {
+		this.shiftAlarm = shiftAlarm;
+	}
+
+	public byte getTurneOverAlarm() {
+		return turneOverAlarm;
+	}
+
+	public void setTurneOverAlarm(byte turneOverAlarm) {
+		this.turneOverAlarm = turneOverAlarm;
+	}
+
+	public Byte getAccStatus() {
+		return accStatus;
+	}
+
+	public void setAccStatus(Byte accStatus) {
+		this.accStatus = accStatus;
+	}
+
+	public Byte getLocationStatus() {
+		return locationStatus;
+	}
+
+	public void setLocationStatus(Byte locationStatus) {
+		this.locationStatus = locationStatus;
+	}
+
+	public Byte getLatitudeStatus() {
+		return latitudeStatus;
+	}
+
+	public void setLatitudeStatus(Byte latitudeStatus) {
+		this.latitudeStatus = latitudeStatus;
+	}
+
+	public Byte getLongitudeStatus() {
+		return longitudeStatus;
+	}
+
+	public void setLongitudeStatus(Byte longitudeStatus) {
+		this.longitudeStatus = longitudeStatus;
+	}
+
+	public Byte getRuningStatus() {
+		return runingStatus;
+	}
+
+	public void setRuningStatus(Byte runingStatus) {
+		this.runingStatus = runingStatus;
+	}
+
+	public Byte getEncipherStatus() {
+		return encipherStatus;
+	}
+
+	public void setEncipherStatus(Byte encipherStatus) {
+		this.encipherStatus = encipherStatus;
+	}
+
+	public Byte getOilStatus() {
+		return oilStatus;
+	}
+
+	public void setOilStatus(Byte oilStatus) {
+		this.oilStatus = oilStatus;
+	}
+
+	public Byte getPowerStatus() {
+		return powerStatus;
+	}
+
+	public void setPowerStatus(Byte powerStatus) {
+		this.powerStatus = powerStatus;
+	}
+
+	public Byte getDoorStatus() {
+		return doorStatus;
+	}
+
+	public void setDoorStatus(Byte doorStatus) {
+		this.doorStatus = doorStatus;
+	}
+
+	public double getMileage() {
+		return mileage;
+	}
+
+	public void setMileage(double mileage) {
+		this.mileage = mileage;
+	}
+
+	public float getOilMass() {
+		return oilMass;
+	}
+
+	public void setOilMass(float oilMass) {
+		this.oilMass = oilMass;
+	}
+
+	public float getSensorSpeed() {
+		return sensorSpeed;
+	}
+
+	public void setSensorSpeed(float sensorSpeed) {
+		this.sensorSpeed = sensorSpeed;
+	}
+
+	public short getAlarmId() {
+		return alarmId;
+	}
+
+	public void setAlarmId(short alarmId) {
+		this.alarmId = alarmId;
+	}
+
+	public Byte getOverspeedRegionType() {
+		return overspeedRegionType;
+	}
+
+	public void setOverspeedRegionType(Byte overspeedRegionType) {
+		this.overspeedRegionType = overspeedRegionType;
+	}
+
+	public int getOverspeedRegionId() {
+		return overspeedRegionId;
+	}
+
+	public void setOverspeedRegionId(int overspeedRegionId) {
+		this.overspeedRegionId = overspeedRegionId;
+	}
+
+	public Byte getIoRegionType() {
+		return ioRegionType;
+	}
+
+	public void setIoRegionType(Byte ioRegionType) {
+		this.ioRegionType = ioRegionType;
+	}
+
+	public int getIoRegionId() {
+		return ioRegionId;
+	}
+
+	public void setIoRegionId(int ioRegionId) {
+		this.ioRegionId = ioRegionId;
+	}
+
+	public Byte getIoRegion() {
+		return ioRegion;
+	}
+
+	public void setIoRegion(Byte ioRegion) {
+		this.ioRegion = ioRegion;
+	}
+
+	public int getDrivingTimeRegionId() {
+		return drivingTimeRegionId;
+	}
+
+	public void setDrivingTimeRegionId(int drivingTimeRegionId) {
+		this.drivingTimeRegionId = drivingTimeRegionId;
+	}
+
+	public short getDrivingTime() {
+		return drivingTime;
+	}
+
+	public void setDrivingTime(short drivingTime) {
+		this.drivingTime = drivingTime;
+	}
+
+	public Byte getDrivingTimeResult() {
+		return drivingTimeResult;
+	}
+
+	public void setDrivingTimeResult(Byte drivingTimeResult) {
+		this.drivingTimeResult = drivingTimeResult;
+	}
+
+	public Byte getTurnOverSpeedAlarm() {
+		return turnOverSpeedAlarm;
+	}
+
+	public void setTurnOverSpeedAlarm(Byte turnOverSpeedAlarm) {
+		this.turnOverSpeedAlarm = turnOverSpeedAlarm;
+	}
+
+	public Byte getHardBrakingAlarm() {
+		return hardBrakingAlarm;
+	}
+
+	public void setHardBrakingAlarm(Byte hardBrakingAlarm) {
+		this.hardBrakingAlarm = hardBrakingAlarm;
+	}
+
+	public Float getCarriageTemperature1() {
+		return carriageTemperature1;
+	}
+
+	public void setCarriageTemperature1(Float carriageTemperature1) {
+		this.carriageTemperature1 = carriageTemperature1;
+	}
+
+	public Float getCarriageTemperature2() {
+		return carriageTemperature2;
+	}
+
+	public void setCarriageTemperature2(Float carriageTemperature2) {
+		this.carriageTemperature2 = carriageTemperature2;
+	}
+
+}

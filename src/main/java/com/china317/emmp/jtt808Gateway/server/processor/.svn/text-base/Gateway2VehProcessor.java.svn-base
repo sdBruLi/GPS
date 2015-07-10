@@ -1,0 +1,230 @@
+package com.china317.emmp.jtt808Gateway.server.processor;
+
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.codec.jtt808Gateway.GatewayUnitPack;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x0011;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x8011;
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808Praser;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0001;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0104;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0201;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0302;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0500;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0700;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0802;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0805;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8001;
+import com.china317.core.codec.jtt808_2011.util.SequenceNumProducer;
+import com.china317.emmp.jtt808Gateway.server.broadcast.SingleSessionIdCommandBroadcast;
+import com.china317.emmp.jtt808Gateway.server.transport.VehServer;
+import com.china317.emmp.jtt808Gateway.server.transport.VehSessionManager;
+
+public class Gateway2VehProcessor {
+	private static Log										log				= LogFactory.getLog(Gateway2VehProcessor.class);
+	private static Map<Long, IoSession>						loginSuccessMap	= new Hashtable<Long, IoSession>();
+	private static List<SingleSessionIdCommandBroadcast>	broadcastList	= new ArrayList<SingleSessionIdCommandBroadcast>();
+
+	/**
+	 * 验证是否登录
+	 * 
+	 * @param session
+	 * @param pack
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean verifyAuth(IoSession session) throws Exception {
+		return loginSuccessMap.containsValue(session);
+	}
+
+	public static boolean loginCheck(long sessionId, UnitPackJT808 pack) throws Exception {
+		IoSession session = VehServer.getSession(sessionId);
+		if (session == null) {
+			return false;
+		}
+		if (loginSuccessMap.containsValue(session)) {
+			return true;
+		}
+		return true;
+	}
+
+	public static void putAuth(long sessionId, UnitPackJT808 authPack) throws Exception {
+		IoSession session = VehServer.getSession(sessionId);
+		if (session != null)
+			loginSuccessMap.put(new Long(sessionId), session);
+	}
+
+	public static void removeAuth(long sessionId) throws Exception {
+		loginSuccessMap.remove(new Long(sessionId));
+	}
+
+	public static byte processTransData(GatewayUnitPack gUnit, IoSession session2) throws Exception {
+		GatewayBody_0x0011 body0011 = (GatewayBody_0x0011) gUnit.getMsgBody();
+		Long sessionId = Long.parseLong(body0011.getSessionid());
+		UnitPackJT808 pack = UnitPackJT808Praser.prasePacket(body0011.getRowBuffer());
+
+		sessionId = VehSessionManager.getInstance().getVehSessionId(pack.getMobileNum());
+		log.debug("Get SessionId[" + sessionId + "] from  VehSessionManager by MobileNum[" + pack.getMobileNum() + "]...");
+		if (sessionId != null) {
+			//
+			switch (pack.getMsgID()) {
+				case JT808MsgId.MSGID_SERVER_response_register:
+					if (VehServer.write(sessionId, pack, false)) {
+						return GatewayBody_0x8011.RESULT_OK;
+					} else {
+						return GatewayBody_0x8011.RESULT_FAILURE;
+					}
+				case JT808MsgId.MSGID_SERVER_response:
+					JT808MsgBody_0x8001 packbody = (JT808MsgBody_0x8001) pack.getMsgBody();
+					if (packbody.getResponseMsgID() == JT808MsgId.MSGID_CLIENT_authentication) {
+						IoSession session = VehServer.getSession(sessionId);
+						if (session == null) {
+							return GatewayBody_0x8011.RESULT_OFFLINE;
+						} else {
+							if (writeCheck(session, pack)) {
+								if (packbody.getResult() == 0) {
+									loginSuccessMap.put(new Long(sessionId), session);
+								}
+								return GatewayBody_0x8011.RESULT_OK;
+							} else {
+								return GatewayBody_0x8011.RESULT_OFFLINE;
+							}
+						}
+					} else if (packbody.getResponseMsgID() == JT808MsgId.MSGID_CLIENT_deregister) {
+						IoSession session = VehServer.getSession(sessionId);
+						if (session == null) {
+							return GatewayBody_0x8011.RESULT_OFFLINE;
+						} else {
+							if (writeCheck(session, pack)) {
+								session.close(false);
+								return GatewayBody_0x8011.RESULT_OK;
+							} else {
+								return GatewayBody_0x8011.RESULT_OFFLINE;
+							}
+						}
+					}
+					// 终端不会再次回复
+					// else if (packbody.getResponseMsgID() == JT808MsgId.MSGID_CLIENT_position) {
+					// pack.setSequenceNum(SequenceNumProducer.getSequenceNum(sessionId));
+					// SingleSessionIdCommandBroadcast multimediaBroadcast = new SingleSessionIdCommandBroadcast(3, 90, pack, true,
+					// VehServer.getInstance().getAcceptor());
+					// multimediaBroadcast.addSession(sessionId, pack.getSequenceNum());
+					// multimediaBroadcast.setMessageId(body0011.getMessageId());
+					// multimediaBroadcast.setGatewaySession(session2);
+					// broadcastList.add(multimediaBroadcast);
+					// multimediaBroadcast.start();
+					// return GatewayBody_0x8011.RESULT_OK;
+					// }
+					else {
+						return writeCheckLogin(sessionId, pack);
+					}
+				case JT808MsgId.MSGID_SERVER_shot_immedi:
+					pack.setSequenceNum(SequenceNumProducer.getSequenceNum(sessionId));
+					SingleSessionIdCommandBroadcast multimediaBroadcast = new SingleSessionIdCommandBroadcast(3, 90, pack, true, VehServer
+							.getInstance().getAcceptor());
+					multimediaBroadcast.addSession(sessionId, pack.getSequenceNum());
+					multimediaBroadcast.setMessageId(body0011.getMessageId());
+					multimediaBroadcast.setGatewaySession(session2);
+					broadcastList.add(multimediaBroadcast);
+					multimediaBroadcast.start();
+					return GatewayBody_0x8011.RESULT_OK;
+				default:
+					// return writeCheckLogin(sessionId, pack);
+					log.info(pack.toString());
+					pack.setSequenceNum(SequenceNumProducer.getSequenceNum(sessionId));
+					SingleSessionIdCommandBroadcast commonBroadcast = new SingleSessionIdCommandBroadcast(3, 90, pack, true, VehServer.getInstance()
+							.getAcceptor());
+					commonBroadcast.addSession(sessionId, pack.getSequenceNum());
+					commonBroadcast.setMessageId(body0011.getMessageId());
+					commonBroadcast.setGatewaySession(session2);
+					broadcastList.add(commonBroadcast);
+					commonBroadcast.start();
+					return GatewayBody_0x8011.RESULT_OK;
+			}
+		}
+		return GatewayBody_0x8011.RESULT_FAILURE;
+		//
+	}
+
+	private static byte writeCheckLogin(long sessionId, UnitPackJT808 vpu) {
+		if (loginSuccessMap.containsKey(new Long(sessionId))) {
+			IoSession session = loginSuccessMap.get(new Long(sessionId));
+			String smnum = (String) session.getAttribute("MOBILE_NUM");
+			if (smnum.equals(vpu.getMobileNum())) {
+				session.write(vpu);
+				return GatewayBody_0x8011.RESULT_OK;
+			} else {
+				return GatewayBody_0x8011.RESULT_OFFLINE;
+			}
+		} else {
+			return GatewayBody_0x8011.RESULT_OFFLINE;
+		}
+	}
+
+	private static boolean writeCheck(IoSession session, UnitPackJT808 vpu) {
+		String smnum = (String) session.getAttribute("MOBILE_NUM");
+		if (smnum.equals(vpu.getMobileNum())) {
+			session.write(vpu);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static void processMonitorResponse(UnitPackJT808 packJT808) {
+		for (SingleSessionIdCommandBroadcast broadcast : broadcastList) {
+			// JT808MsgBody_0x0001 body = (JT808MsgBody_0x0001)packJT808.getMsgBody();
+			boolean isSuccess = true;
+			int sequenceNum = 0;
+			if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0001) {
+				JT808MsgBody_0x0001 body = (JT808MsgBody_0x0001) packJT808.getMsgBody();
+				sequenceNum = body.getResponseSequenceNum();
+				if (body.getResult() != 0) {
+					isSuccess = false;
+				}
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0104) {
+				JT808MsgBody_0x0104 body = (JT808MsgBody_0x0104) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqnum();
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0201) {
+				JT808MsgBody_0x0201 body = (JT808MsgBody_0x0201) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqnum();
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0302) {
+				JT808MsgBody_0x0302 body = (JT808MsgBody_0x0302) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqNum();
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0500) {
+				JT808MsgBody_0x0500 body = (JT808MsgBody_0x0500) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqnum();
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0700) {
+				JT808MsgBody_0x0700 body = (JT808MsgBody_0x0700) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqNum();
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0802) {
+				JT808MsgBody_0x0802 body = (JT808MsgBody_0x0802) packJT808.getMsgBody();
+				sequenceNum = body.getAckSeqNum();
+				/**808c by Greg*/
+			} else if (packJT808.getMsgBody() instanceof JT808MsgBody_0x0805) {
+				JT808MsgBody_0x0805 body = (JT808MsgBody_0x0805) packJT808.getMsgBody();
+				sequenceNum = body.getResponseSequenceNum();
+				if (body.getResult() != 0) {
+					isSuccess = false;
+				}
+				/**808c*/
+			}
+
+			if (broadcast.isExist(packJT808.getSessionId(), sequenceNum)) {
+				broadcast.setSuccess(isSuccess);
+				broadcast.process();
+				break;
+			}
+
+		}
+	}
+}

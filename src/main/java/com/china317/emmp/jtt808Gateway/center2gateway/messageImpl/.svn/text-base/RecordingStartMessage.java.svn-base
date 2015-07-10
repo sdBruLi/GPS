@@ -1,0 +1,106 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8804;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:录音
+ */
+public class RecordingStartMessage extends BaseDownMessage {
+	/**停止录音*/
+	public static final byte	RECORD_STOP				= 0;	// 停止录音
+	/**开始录音*/
+	public static final byte	RECORD_START			= 0x01;	// 开始录音
+	/**实时上传*/
+	public static final byte	STORE_REALTIME_UPLOAD	= 0;	// 实时上传
+	/**保存*/
+	public static final byte	STORE_LOCAL				= 0x01;	// 保存
+	/**8k*/
+	public static final byte	FREQUENCY_8K			= 0;	// 8k
+	/**11k*/
+	public static final byte	FREQUENCY_11K			= 1;	// 11k
+	/**23k*/
+	public static final byte	FREQUENCY_23K			= 2;	// 23k
+	/**32k*/
+	public static final byte	FREQUENCY_32K			= 3;	// 32k
+	
+	
+	private byte				recordCommand;					// 录音命令
+	private short				recordTime;						// 录音时间
+	private byte				storeSign;						// 保存标志
+	private byte				audioGatherFrequency;			// 音频采集频率
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey
+	 * @param recordCommand 录音命令
+	 * @param recordTime 录音时间
+	 * @param storeSign 保存标志
+	 * @param audioGatherFrequency 音频采样率
+	 * 生成录音开始命令协议封装对象
+	 */
+	public RecordingStartMessage(String mobileNum, String messageKey, byte recordCommand,
+			short recordTime, byte storeSign, byte audioGatherFrequency) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setRecordCommand(recordCommand);
+		this.setRecordTime(recordTime);
+		this.setStoreSign(storeSign);
+		this.setAudioGatherFrequency(audioGatherFrequency);
+		this.setCommand(MessageCommands.Server_Recording_Start);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_record_start);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8804 body = new JT808MsgBody_0x8804();
+		body.setRecordCommand(recordCommand);
+		body.setRecordTime(recordTime);
+		body.setStoreSign(storeSign);
+		body.setAudioGatherFrequency(audioGatherFrequency);
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+	public byte getRecordCommand() {
+		return recordCommand;
+	}
+
+	/**录音指令*/
+	public void setRecordCommand(byte recordCommand) {
+		this.recordCommand = recordCommand;
+	}
+
+	public short getRecordTime() {
+		return recordTime;
+	}
+
+	/**录音时间*/
+	public void setRecordTime(short recordTime) {
+		this.recordTime = recordTime;
+	}
+
+	public byte getStoreSign() {
+		return storeSign;
+	}
+
+	/**保存方式*/
+	public void setStoreSign(byte storeSign) {
+		this.storeSign = storeSign;
+	}
+
+	public byte getAudioGatherFrequency() {
+		return audioGatherFrequency;
+	}
+
+	/**采样率*/
+	public void setAudioGatherFrequency(byte audioGatherFrequency) {
+		this.audioGatherFrequency = audioGatherFrequency;
+	}
+
+}

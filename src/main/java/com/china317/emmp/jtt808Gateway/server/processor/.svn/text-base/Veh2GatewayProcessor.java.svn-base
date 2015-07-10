@@ -1,0 +1,204 @@
+package com.china317.emmp.jtt808Gateway.server.processor;
+
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.session.IoSession;
+
+import com.china317.core.codec.jtt808Gateway.DataRow0012;
+import com.china317.core.codec.jtt808Gateway.GatewayCMD;
+import com.china317.core.codec.jtt808Gateway.GatewayUnitPack;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x0001;
+import com.china317.core.codec.jtt808Gateway.bodyPartImpl.GatewayBody_0x0012;
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+
+public class Veh2GatewayProcessor extends Thread {
+	private static Log										log				= null;
+	private static Hashtable<IoSession, Veh2GatewayProcessor>	sessionMap		= new Hashtable<IoSession, Veh2GatewayProcessor>();
+	private BlockingQueue<UnitPackJT808>			serverPackPool	= new LinkedBlockingQueue<UnitPackJT808>(3000);
+	private BlockingQueue<GatewayUnitPack>			gatewayPackPool	= new LinkedBlockingQueue<GatewayUnitPack>(1000);
+	private IoSession								gatewaySession	= null;
+	private boolean									isrun			= true;
+
+	private Veh2GatewayProcessor(String name, IoSession gatewaySession_) {
+		setName(name);
+		log = LogFactory.getLog(Veh2GatewayProcessor.class.getName() + "-" + name);
+		gatewaySession = gatewaySession_;
+	}
+
+	/**
+	 * 进入数据包等待队列
+	 * @param pack
+	 * @throws Exception
+	 */
+	public static void putInWaitingQueue(UnitPackJT808 pack) throws Exception {
+		try {
+//			Iterator<Veh2GatewayProcessor> iter = sessionMap.values().iterator();
+//			while (iter.hasNext()) {
+//				Veh2GatewayProcessor mach = iter.next();
+//				if (!mach.serverPackPool.offer(pack)) {
+//					mach.log.error("serverPackPool is pull");
+//				}
+//			}
+			Iterator<Entry<IoSession, Veh2GatewayProcessor>> iterator = sessionMap.entrySet().iterator();
+			Entry<IoSession, Veh2GatewayProcessor> entry;
+			Veh2GatewayProcessor p;
+			while (iterator.hasNext()) {
+				entry = iterator.next();
+				p = entry.getValue();
+				//遇到网络堵塞，断连该连接
+				if (!p.serverPackPool.offer(pack)) {
+					log.error("serverPackPool is pull ,now reset it");
+					p.isrun=false;
+					entry.getKey().close(false);
+					iterator.remove();
+					p=null;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void putResponse(IoSession session, GatewayUnitPack pack) throws Exception {
+		try {
+			if (sessionMap.containsKey(session)) {
+				Veh2GatewayProcessor mach = sessionMap.get(session);
+				if (!mach.gatewayPackPool.offer(pack)) {
+					Veh2GatewayProcessor.log.error("gatewayPackPool is pull");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void init() {
+	}
+
+	@Override
+	public void run() {
+		init();
+		UnitPackJT808 serverPack;
+		GatewayUnitPack gwPack;
+		long sendtimestart = System.currentTimeMillis();
+		GatewayBody_0x0012 body0012 = null;
+		GatewayBody_0x0012 tempBody0012 = null;
+		while (isrun) {
+			try {
+//				GatewayBody_0x0012 body0012 = new GatewayBody_0x0012();
+				
+				int bodysize = 0;
+				for (;;) {
+					if (tempBody0012 != null) {
+						body0012 = tempBody0012;
+						tempBody0012 = null;
+						break;
+					} else {
+						serverPack = serverPackPool.poll(1000, TimeUnit.MILLISECONDS);
+						if (serverPack == null) {
+							break;
+						} else if ((serverPack.getMsgID() == JT808MsgId.MSGID_CLIENT_data_compression_upload) ||
+								(serverPack.getMsgID() == JT808MsgId.MSGID_CLIENT_data_up_trans) ||
+								(serverPack.getMsgID() == JT808MsgId.MSGID_CLIENT_driver_record_upload) ||
+								(serverPack.getMsgID() == JT808MsgId.MSGID_CLIENT_multimedia_upload) ||
+								(serverPack.getMsgID() == JT808MsgId.MSGID_CLIENT_response_query_parameter)) {
+							if (body0012 == null) {
+								body0012 = new GatewayBody_0x0012();
+								DataRow0012 row = new DataRow0012();
+								row.setSessionid(serverPack.getSessionId() + "");
+								row.setRowBuffer(serverPack.getPacketBytes());
+								body0012.addDataRowList(row);
+								break;
+							} else {
+								tempBody0012 = new GatewayBody_0x0012();
+								
+								DataRow0012 row = new DataRow0012();
+								row.setSessionid(serverPack.getSessionId() + "");
+								row.setRowBuffer(serverPack.getPacketBytes());
+								tempBody0012.addDataRowList(row);
+								break;
+							}
+							
+						} else {
+							if (body0012 == null) {
+								body0012 = new GatewayBody_0x0012();
+							}
+							DataRow0012 row = new DataRow0012();
+							row.setSessionid(serverPack.getSessionId() + "");
+							row.setRowBuffer(serverPack.getPacketBytes());
+							body0012.addDataRowList(row);
+							bodysize = bodysize + row.getLength() + 4 + 1;
+							if (bodysize > 1000) {
+								break;
+							}
+							//if (System.currentTimeMillis() - starttime > 1000) {
+							//	break;
+							//}
+						}
+					}
+					
+				}
+				if (body0012 != null) {
+					body0012.setRowNum(body0012.getDataRowList().size());
+					if (body0012.getRowNum() > 0) 
+						log.debug("bodysize: " + bodysize + " rowNum: " + body0012.getRowNum());
+					if (body0012.getRowNum() == 0) {
+						//心跳应该由客户端发起，即由web服务器想网关发送心跳信息
+//						if (System.currentTimeMillis() - sendtimestart > 30 * 1000) {
+//							//发送心跳
+//							GatewayUnitPack heartpack = new GatewayUnitPack(GatewayCMD.HEART_LINK);
+//							gatewaySession.write(heartpack);
+//							sendtimestart = System.currentTimeMillis();
+//						}
+						continue;
+					}
+					GatewayUnitPack sendpack = new GatewayUnitPack(GatewayCMD.SEND_MULTI_MSG);
+					sendpack.setMsgBody(body0012);
+					//
+					for (int i = 0; i < 3; i++) {
+						gatewaySession.write(sendpack);
+						sendtimestart = System.currentTimeMillis();
+						gwPack = gatewayPackPool.poll(10, TimeUnit.SECONDS);
+						if (gwPack != null) {
+							break;
+						}
+					}
+				}
+				
+				body0012 = null;
+			} catch (Exception e) {
+				log.error("", e);
+			}
+		}
+	}
+
+	public static boolean login(IoSession session, GatewayUnitPack unit) throws Exception {
+		GatewayBody_0x0001 body0001 = (GatewayBody_0x0001) unit.getMsgBody();
+		if (sessionMap.containsKey(session)) {
+			return true;
+		} else {
+			Veh2GatewayProcessor upm = new Veh2GatewayProcessor(body0001.getCode(), session);
+			sessionMap.put(session, upm);
+			log.debug("gateway sessionMap put a session	: code[" + body0001.getCode()+"] session id["+ session.getId()+"]");
+			upm.start();
+			return true;
+		}
+	}
+
+	public static void removeSession(IoSession session) throws Exception {
+		Veh2GatewayProcessor um = sessionMap.remove(session);
+		if (um != null) um.isrun = false;//um is null, nullException
+	}
+
+	public static boolean checkLogin(IoSession session) throws Exception {
+		return (sessionMap.containsKey(session));
+	}
+}

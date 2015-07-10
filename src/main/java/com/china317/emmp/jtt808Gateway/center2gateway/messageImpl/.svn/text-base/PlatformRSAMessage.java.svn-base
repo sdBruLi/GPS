@@ -1,0 +1,61 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8A00;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:平台RSA公钥
+ */
+public class PlatformRSAMessage extends BaseDownMessage {
+	
+	private int				e;							// RSA公钥中的e
+	private byte[]			n;							// RSA公钥中的n
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey
+	 * @param e RSA公钥中的e
+	 * @param n RSA公钥中的n
+	 * @return UnitPackJT808
+	 * @throws Exception
+	 * 生成平台RSA公钥命令协议封装包
+	 */
+	public PlatformRSAMessage(String mobileNum, String messageKey, int e, byte[] n){
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setE(e);
+		this.setN(n);
+		this.setCommand(MessageCommands.Server_Platform_RSA);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_platform_rsa);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8A00 body = new JT808MsgBody_0x8A00();
+		body.setE(e);
+		body.setN(n);
+		pack.setMsgBody(body);
+		return pack;
+	}
+	
+	public int getE() {
+		return e;
+	}
+
+	public void setE(int e) {
+		this.e = e;
+	}
+
+	public byte[] getN() {
+		return n;
+	}
+
+	public void setN(byte[] n) {
+		this.n = n;
+	}
+
+}

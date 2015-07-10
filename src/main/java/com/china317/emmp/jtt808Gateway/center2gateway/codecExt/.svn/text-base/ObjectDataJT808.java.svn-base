@@ -1,0 +1,186 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.codecExt;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
+import com.china317.core.base.UpMessage;
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+
+public class ObjectDataJT808 implements UpMessage {
+	private int 							msgId;																		// 命令字（包括终端主发消息，范围（0x0001~0x0FFF）；返回web应用的数据，范围（0x9001~0x9FFF）
+	private long							sessionId;  																// 网关中车辆的session id
+	private String 							mobileNum;																	// 消息对应的手机号
+	private int 							startSeq						= 0;										// 该多对象数据，第一包数据的流水号
+	private String							messageId;																	// 平台主发信息的唯一标示
+	private Map<Integer, ObjectDataPacket> 	packets							= new HashMap<Integer, ObjectDataPacket>();	// 保存分包数据<包序号, 包数据>
+	private int								packetCount;																// 该数据总共分包个数
+	private int								currentMaxSequenceNum			= 0;										// 该数据所有分包中已收到的包的最大序号
+	private int 							ackSeqenceNum;																// 对应的查询流水号
+//	private String 							ackCommand;																	// 对应的查询命令字
+//	private JT808MsgBody 					body;																		// 平台查询反馈的数据包的包体
+	private long							createTime;
+
+	public ObjectDataJT808() {
+		this.createTime = System.currentTimeMillis();
+	}
+	@Override
+	public String getCommand() {
+		return JT808MsgId.getStringCommand(msgId);
+	}
+
+	public long getSessionId() {
+		return sessionId;
+	}
+
+	@Override
+	public String getUniqueIndex() {
+		return startSeq+"";
+	}
+
+	public byte[] getBytes() {
+		IoBuffer buf = IoBuffer.allocate(128).setAutoExpand(true);
+		for (int i = 1; i < (packetCount+1); i++) {
+			buf.put(this.packets.get(i).getBuffer());
+		}
+		byte[] bytes = new byte[buf.position()];
+		buf.rewind();
+		buf.get(bytes);
+		return bytes;
+	}
+	
+	public List<Integer> getPatchPackets() {
+		List<Integer> listPkgNums = null;
+		for (int i = 1; i <= this.currentMaxSequenceNum; i++) {
+			if (this.packets.get(i) == null) {
+				if (listPkgNums == null) {
+					listPkgNums = new ArrayList<Integer>();
+				}
+				listPkgNums.add(i);
+			}
+		}
+		//目前有两次回补的情况：1、当数据的包序号为总序号一半时回补；2、当数据的包序号为总序号的总长度时回补。
+//		if ((listPkgNums == null) && (this.currentMaxSequenceNum < this.packetCount)) {
+//			for (int i = (this.currentMaxSequenceNum+1); i <= this.packetCount;i++) {
+//				if (this.packets.get(i) == null) {
+//					if (listPkgNums == null) {
+//						listPkgNums = new ArrayList<Integer>();
+//					}
+//					listPkgNums.add(i);
+//				}
+//			}
+//		}
+		return listPkgNums;
+	}
+	
+	public void addPacket(Integer seq, ObjectDataPacket packet) {
+		this.packets.put(seq, packet);
+		if (packet.getId() > this.currentMaxSequenceNum) {
+			this.currentMaxSequenceNum = packet.getId();
+		}
+	}
+	
+	public int getPacketsSize() {
+		return this.packets.size();
+	}
+	
+	public int getMsgId() {
+		return msgId;
+	}
+
+	public void setMsgId(int msgId) {
+		this.msgId = msgId;
+	}
+
+	public int getStartSeq() {
+		return startSeq;
+	}
+
+	public void setStartSeq(int startSeq) {
+		this.startSeq = startSeq;
+	}
+
+	public void setSessionId(long sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public String getMessageId() {
+		return messageId;
+	}
+
+	public void setMessageId(String messageId) {
+		this.messageId = messageId;
+	}
+
+	public Map<Integer, ObjectDataPacket> getPackets() {
+		return packets;
+	}
+
+	public void setPackets(Map<Integer, ObjectDataPacket> packets) {
+		this.packets = packets;
+	}
+	
+	public int getPacketCount() {
+		return packetCount;
+	}
+
+	public void setPacketCount(int packetCount) {
+		this.packetCount = packetCount;
+	}
+
+	public int getCurrentMaxSequenceNum() {
+		return currentMaxSequenceNum;
+	}
+
+	public void setCurrentMaxSequenceNum(int currentMaxSequenceNum) {
+		this.currentMaxSequenceNum = currentMaxSequenceNum;
+	}
+
+	public String getMobileNum() {
+		return mobileNum;
+	}
+
+	public void setMobileNum(String mobileNum) {
+		this.mobileNum = mobileNum;
+	}
+
+	public int getAckSeqenceNum() {
+		return ackSeqenceNum;
+	}
+
+	public void setAckSeqenceNum(int ackSeqenceNum) {
+		this.ackSeqenceNum = ackSeqenceNum;
+	}
+//
+//	public String getAckCommand() {
+//		return ackCommand;
+//	}
+//
+//	public void setAckCommand(String ackCommand) {
+//		this.ackCommand = ackCommand;
+//	}
+//
+//	public JT808MsgBody getBody() {
+//		return body;
+//	}
+//
+//	public void setBody(JT808MsgBody body) {
+//		this.body = body;
+//	}
+	public long getCreateTime() {
+		return createTime;
+	}
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
+	}
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

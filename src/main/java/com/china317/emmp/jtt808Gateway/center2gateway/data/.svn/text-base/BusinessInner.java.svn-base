@@ -1,0 +1,28 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+public class BusinessInner {
+	private long createTime;
+	private Object obj;
+	
+	public BusinessInner(long time, Object obj) {
+		this.createTime = time;
+		this.obj = obj;
+	}
+	
+	public long getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
+	}
+
+	public Object getObj() {
+		return obj;
+	}
+
+	public void setObj(Object obj) {
+		this.obj = obj;
+	}
+
+}

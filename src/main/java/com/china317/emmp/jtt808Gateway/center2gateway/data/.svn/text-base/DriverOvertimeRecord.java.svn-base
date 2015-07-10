@@ -1,0 +1,60 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.data;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DriverOvertimeRecord {
+	private String licenseNum = null;
+	private List<OvertimeRecord> records = null;
+	public void parse(byte[] datas) {
+		if (datas != null) {
+			byte[] dests = new byte[18];
+			System.arraycopy(datas, 0, dests, 0, dests.length);
+			try {
+				licenseNum = new String(dests, "GBK");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			if (datas.length > 28) {
+				int index = 18;
+				do {
+					byte[] times = new byte[10];
+					System.arraycopy(datas, index, times, 0, 10);
+					OvertimeRecord record = new OvertimeRecord();
+					record.parse(times);
+					if (records == null) {
+						records = new ArrayList<OvertimeRecord>();
+					}
+					records.add(record);
+					index = index + 10;
+				} while (datas.length > index);
+			}
+		}
+	}
+	@Override
+	public String toString() {
+		if (licenseNum == null) {
+			return null;
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append("licenseNum:");
+		sb.append(licenseNum);
+		for (OvertimeRecord r : records) {
+			sb.append(r.toString() + " --- ");
+		}
+		return sb.toString();
+	}
+	public List<OvertimeRecord> getRecords() {
+		return records;
+	}
+	public void setRecords(List<OvertimeRecord> records) {
+		this.records = records;
+	}
+	public String getLicenseNum() {
+		return licenseNum;
+	}
+	public void setLicenseNum(String licenseNum) {
+		this.licenseNum = licenseNum;
+	}
+}

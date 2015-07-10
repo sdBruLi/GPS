@@ -1,0 +1,69 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.Date;
+
+import com.china317.emmp.jtt808Gateway.center2gateway.DownMessage;
+
+public abstract class BaseDownMessage implements DownMessage{
+	/**已向网关发送成功*/
+	public static final byte	RESULT_OK			= 0;	// 已向网关发送成功
+	/**发送失败*/
+	public static final byte	RESULT_FAILURE		= 1;	// 发送失败
+	/**车辆未上线*/
+	public static final byte	RESULT_OFFLINE		= 2;	// 车辆未上线
+	/**收到终端应答，且操作成功*/
+	public static final byte	RESULT_ACK_OK		= 3;	// 收到终端应答，且操作成功
+	/**收到终端应答，但操作失败*/
+	public static final byte	RESULT_ACK_FAILED	= 4;	// 收到终端应答，但操作失败
+	/**收到应答数据*/
+	public static final byte	RESULT_ACK_RESULT	= 5;	// 收到应答数据
+	/**应答超时*/
+	public static final byte	RESULT_ACK_TIMEOUT	= 6;	// 应答超时
+	/**等待结果超时*/
+	public static final byte	RESULT_RST_TIMEOUT	= 7;	// 等待结果超时
+	
+	private String command;
+	private String mobileNum;
+	private String messageKey;
+	private Date createTime;
+	public BaseDownMessage() {
+		createTime = new Date(System.currentTimeMillis());
+	}
+	@Override
+	public String getUniqueIndex() {
+		return null;
+	}
+
+	@Override
+	public String getMessageKey() {
+		return messageKey;
+	}
+	/**消息序号*/
+	public void setMessageKey(String messageKey) {
+		this.messageKey = messageKey;
+	}
+
+	public String getCommand() {
+		return command;
+	}
+	/**消息号*/
+	public void setCommand(String command) {
+		this.command = command;
+	}
+
+	public String getMobileNum() {
+		return mobileNum;
+	}
+	/**终端SIM*/
+	public void setMobileNum(String mobileNum) {
+		this.mobileNum = mobileNum;
+	}
+	public Date getCreateTime() {
+		return createTime;
+	}
+	/**创建时间*/
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+
+}

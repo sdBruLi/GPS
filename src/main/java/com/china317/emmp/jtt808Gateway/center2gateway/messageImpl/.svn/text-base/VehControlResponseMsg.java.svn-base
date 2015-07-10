@@ -1,0 +1,57 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0500;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:车辆控制应答
+ */
+public class VehControlResponseMsg extends BaseUpMessage {
+	private static final Log	log	= LogFactory.getLog(VehControlResponseMsg.class);
+	private short				ackSeqnum;												// 应答流水号
+	private PositionMessage		position;												// 位置信息汇报消息体 （根据对应的状态位判断控制成功与否）
+
+	public VehControlResponseMsg() {
+		this.setCommand(MessageCommands.client_Veh_Control_Response);
+	}
+
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		this.unpackHeadPart(pack);
+		try {
+			JT808MsgBody_0x0500 body = (JT808MsgBody_0x0500) pack.getMsgBody();
+			this.setAckSeqnum(body.getAckSeqnum());
+			if (body.getPostion() != null) {
+				position = new PositionMessage();
+				position.unpackBody(body.getPostion());
+			}
+		} catch (Exception e) {
+			log.error("", e);
+		}
+	}
+
+	public short getAckSeqnum() {
+		return ackSeqnum;
+	}
+
+	/** 应答流水 */
+	public void setAckSeqnum(short ackSeqnum) {
+		this.ackSeqnum = ackSeqnum;
+	}
+
+	public PositionMessage getPosition() {
+		return position;
+	}
+
+	/** 位置信息 */
+	public void setPosition(PositionMessage postion) {
+		this.position = postion;
+	}
+
+}

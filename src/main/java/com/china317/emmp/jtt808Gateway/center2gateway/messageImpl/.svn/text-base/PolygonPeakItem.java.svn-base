@@ -1,0 +1,28 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+public class PolygonPeakItem {
+	
+	private int						peakLatitude;				// 左上点纬度，单位是乘以10的6次方
+	private int						peakLongitude;				// 左上点经度
+	
+	public PolygonPeakItem(int peakLatitude, int peakLongitude) {
+		this.peakLatitude = peakLatitude;
+		this.peakLongitude = peakLongitude;
+	}
+	public int getPeakLatitude() {
+		return peakLatitude;
+	}
+
+	public void setPeakLatitude(int peakLatitude) {
+		this.peakLatitude = peakLatitude;
+	}
+
+	public int getPeakLongitude() {
+		return peakLongitude;
+	}
+
+	public void setPeakLongitude(int peakLongitude) {
+		this.peakLongitude = peakLongitude;
+	}
+
+}

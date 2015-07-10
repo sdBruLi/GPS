@@ -1,0 +1,60 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8800;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+import com.china317.emmp.jtt808Gateway.center2gateway.codecExt.JT808ExtMsgId;
+
+/**
+ * @date 2013-8-8 下午01:24:45 
+ * @author: Greg
+ * @description:多媒体数据上传补包应答
+ */
+public class CheckMultiDataReSendResponse extends BaseDownMessage {
+	private int					multimediaId;					// 多媒体ID
+	private List<Integer> resendPkgNums;
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_response_multimedia_upload);
+		JT808MsgBody_0x8800 body_0x8800 = new JT808MsgBody_0x8800();
+		body_0x8800.setMultimediaID(multimediaId);
+		body_0x8800.setRetransPkgSum((byte) resendPkgNums.size());
+		body_0x8800.setRetransPkgList(resendPkgNums);
+		body_0x8800.bulidBody();
+
+		pack.setMsgBody(body_0x8800);
+		pack.setMsgBody(body_0x8800.getBodyBuffer());
+		pack.setMobileNum(this.getMobileNum());
+		pack.setSequenceNum(0);
+		return pack;
+	}
+	
+	public CheckMultiDataReSendResponse(String mobileNum, int multimediaId,List<Integer> resendPkgNums){
+		this.setMobileNum(mobileNum);
+		this.setMultimediaId(multimediaId);
+		this.setResendPkgNums(resendPkgNums);
+		this.setCommand(MessageCommands.Server_MultiData_Resend);
+	}
+
+	public int getMultimediaId() {
+		return multimediaId;
+	}
+
+	/**媒体id*/
+	public void setMultimediaId(int multimediaId) {
+		this.multimediaId = multimediaId;
+	}
+
+	public List<Integer> getResendPkgNums() {
+		return resendPkgNums;
+	}
+	/**重传包序号*/
+	public void setResendPkgNums(List<Integer> resendPkgNums) {
+		this.resendPkgNums = resendPkgNums;
+	}
+
+}

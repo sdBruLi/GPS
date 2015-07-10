@@ -1,0 +1,61 @@
+package com.china317.emmp.jtt808Gateway.server.Container;
+
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.emmp.jtt808Gateway.distribute.ConfigLoader;
+import com.china317.emmp.jtt808Gateway.distribute.client.DistributeClient;
+
+/**
+ * @date: 2013-3-18
+ * @author: Greg
+ * @description:缓存转发客户端。客户端的初始化加载、启动
+ */
+public class DistributeClientContainer {
+	private final static Log log = LogFactory.getLog(DistributeClientContainer.class);
+	private static ConcurrentHashMap<String, DistributeClient> clientMap = new ConcurrentHashMap<String, DistributeClient>();
+	
+	public static Iterator<DistributeClient> getClients(){
+		return clientMap.values().iterator();
+	}
+	
+	public static DistributeClient getClientBy(String name){
+		return clientMap.get(name);
+	}
+	
+	public static void put(String name,DistributeClient client){
+		clientMap.put(name, client);
+	}
+	
+	/**
+	 * 供vehHandler 调用
+	 * @param pack
+	 */
+	public static void offerData(UnitPackJT808 pack){
+		Iterator<DistributeClient> iterator = clientMap.values().iterator();
+		DistributeClient next =null;
+		while(iterator.hasNext()){
+			next = iterator.next();
+			next.add2Queue(pack);
+			log.info("add to "+next.getClinetName());
+		}
+	}
+	
+	/**
+	 * 转发程序入口
+	 */
+	public static void startClient(){
+		//读取配置文件，初始化client，设置转出、接入的指令限制，设置可转出的车辆列表
+		ConfigLoader.getInstance().load();
+		//启动
+		Iterator<DistributeClient> iterator = clientMap.values().iterator();
+		while(iterator.hasNext()){
+			iterator.next().init();
+		}
+	}
+	
+}

@@ -1,0 +1,54 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x0302;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:提问回答信息
+ */
+public class QuestionResponseMessage extends BaseUpMessage {
+	private static final Log log = LogFactory.getLog(QuestionResponseMessage.class);
+	private short			ackSeqNum;
+	private byte			answerId;
+	
+	public QuestionResponseMessage() {
+		this.setCommand(MessageCommands.Client_Question_Response);
+	}
+	@Override
+	public void unpack(UnitPackJT808 pack) {
+		this.unpackHeadPart(pack);
+		try {
+			JT808MsgBody_0x0302 body = (JT808MsgBody_0x0302)pack.getMsgBody();
+			this.setAckSeqNum(body.getAckSeqNum());
+			this.setAnswerId(body.getAnswerId());
+		} catch (Exception e) {
+			log.error("",e);
+		}		
+	}
+
+	public short getAckSeqNum() {
+		return ackSeqNum;
+	}
+
+	/**提问流水号*/
+	public void setAckSeqNum(short ackSeqNum) {
+		this.ackSeqNum = ackSeqNum;
+	}
+
+	public byte getAnswerId() {
+		return answerId;
+	}
+
+	/**答案id*/
+	public void setAnswerId(byte answerId) {
+		this.answerId = answerId;
+	}
+
+	
+
+}

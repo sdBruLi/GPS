@@ -1,0 +1,76 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.io.UnsupportedEncodingException;
+
+public class PhoneDirectoryContactItem {
+	public static final byte	PHONE_IN				= 1;	// 呼入
+	public static final byte	PHONE_OUT				= 2;	// 呼出
+	public static final byte	PHONE_IN_AND_OUT		= 3;	// 呼入/呼出
+	//
+	private byte				sign;							// 标志
+	private byte				numberLen;						// 号码长度
+	private String				phoneNum;						// 电话号码
+	private byte				contactLen;						// 联系人长度
+	private String				contact;						// 联系人
+
+	public PhoneDirectoryContactItem(byte sign, String phoneNum, String contact) {
+		this.setSign(sign);
+		if (phoneNum != null) {
+			try {
+				this.setNumberLen((byte) phoneNum.getBytes("GBK").length);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			this.setPhoneNum(phoneNum);
+		}
+		if (contact != null) {
+			try {
+				this.setContactLen((byte) contact.getBytes("GBK").length);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			this.setContact(contact);
+		}
+	}
+
+	public byte getSign() {
+		return sign;
+	}
+
+	public void setSign(byte sign) {
+		this.sign = sign;
+	}
+
+	public byte getNumberLen() {
+		return numberLen;
+	}
+
+	public void setNumberLen(byte numberLen) {
+		this.numberLen = numberLen;
+	}
+
+	public String getPhoneNum() {
+		return phoneNum;
+	}
+
+	public void setPhoneNum(String phoneNum) {
+		this.phoneNum = phoneNum;
+	}
+
+	public byte getContactLen() {
+		return contactLen;
+	}
+
+	public void setContactLen(byte contactLen) {
+		this.contactLen = contactLen;
+	}
+
+	public String getContact() {
+		return contact;
+	}
+
+	public void setContact(String contact) {
+		this.contact = contact;
+	}
+
+}

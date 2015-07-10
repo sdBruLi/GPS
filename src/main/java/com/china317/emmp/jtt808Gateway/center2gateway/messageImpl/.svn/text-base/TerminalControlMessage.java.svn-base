@@ -1,0 +1,70 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8105;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+
+/**
+ * @date 2013-8-8 下午01:24:45
+ * @author: Greg
+ * @description:终端控制命令
+ */
+public class TerminalControlMessage extends BaseDownMessage {
+	/** 无线升级 */
+	public static final byte	COMMAND_UPLOAD						= 1;	// 无线升级
+	/** 控制终端连接指定服务器 */
+	public static final byte	COMMAND_CONNECT_1SERVER				= 2;	// 控制终端连接指定服务器
+	/** 终端关机 ，无控制参数 */
+	public static final byte	COMMAND_TEMINAL_SHUTDOWN			= 3;	// 终端关机 ，无控制参数
+	/** 终端复位，无控制参数 */
+	public static final byte	COMMAND_TEMINAL_RESTORATION			= 4;	// 终端复位，无控制参数
+	/** 终端恢复出厂设置，无控制参数 */
+	public static final byte	COMMAND_TEMINAL_RESET_2FACTORY_DEF	= 5;	// 终端恢复出厂设置，无控制参数
+	/** 关闭数据通信，无控制参数 */
+	public static final byte	COMMAND_SHUTDOWN_DATA_COMMUNICATION	= 6;	// 关闭数据通信，无控制参数
+	/** 关闭所有无线通信，无控制参数 */
+	public static final byte	COMMAND_SHUTDOWN_ALL_COMMUNICATION	= 7;	// 关闭所有无线通信，无控制参数
+
+	//
+	private byte				command1;
+	private String				commandParam;
+
+	public TerminalControlMessage(String mobileNum, String messageKey, byte command, String commandParam) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		this.setCommand1(command);
+		this.setCommandParam(commandParam);
+		this.setCommand(MessageCommands.Server_Terminal_Control);
+	}
+
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_control);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8105 body = new JT808MsgBody_0x8105();
+		body.setCommand(this.getCommand1());
+		body.setCommandParam(this.getCommandParam());
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getCommand1() {
+		return command1;
+	}
+
+	/** 控制命令 */
+	public void setCommand1(byte command) {
+		this.command1 = command;
+	}
+
+	public String getCommandParam() {
+		return commandParam;
+	}
+
+	/** 控制参数 */
+	public void setCommandParam(String commandParam) {
+		this.commandParam = commandParam;
+	}
+
+}

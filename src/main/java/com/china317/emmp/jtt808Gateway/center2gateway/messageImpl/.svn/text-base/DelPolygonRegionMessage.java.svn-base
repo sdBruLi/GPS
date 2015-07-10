@@ -1,0 +1,69 @@
+package com.china317.emmp.jtt808Gateway.center2gateway.messageImpl;
+
+import java.util.List;
+
+import com.china317.core.codec.jtt808_2011.JT808MsgId;
+import com.china317.core.codec.jtt808_2011.UnitPackJT808;
+import com.china317.core.codec.jtt808_2011.bodyPartImpl.JT808MsgBody_0x8605;
+import com.china317.emmp.jtt808Gateway.center2gateway.MessageCommands;
+/**
+ * @date 2013-8-8 下午01:24:45 
+ * @author: Greg
+ * @description:删除多边形区域
+ */
+public class DelPolygonRegionMessage extends BaseDownMessage {
+	
+	private byte				regionCount;						// 区域数
+	private List<Integer>		regionIdList;						// 区域ID集合
+
+	/**
+	 * @param mobileNum 手机号
+	 * @param messageKey
+	 * @param regionIdList 要删除的多边形区域ID集合
+	 * @return UnitPackJT808
+	 * @throws Exception
+	 * 生成删除多边形区域协议封装包
+	 */
+	public DelPolygonRegionMessage(String mobileNum, String messageKey,
+			List<Integer> regionIdList) {
+		this.setMobileNum(mobileNum);
+		this.setMessageKey(messageKey);
+		if (regionIdList != null) {
+			this.setRegionCount((byte) regionIdList.size());
+			this.setRegionIdList(regionIdList);
+		}
+		this.setCommand(MessageCommands.Server_Del_Polygon_Region);
+	}
+	
+	@Override
+	public UnitPackJT808 pack() throws Exception {
+		UnitPackJT808 pack = new UnitPackJT808(JT808MsgId.MSGID_SERVER_delete_polygon_region);
+		pack.setMobileNum(this.getMobileNum());
+		JT808MsgBody_0x8605 body = new JT808MsgBody_0x8605();
+		if (regionIdList != null) {
+			body.setRegionCount((byte) regionIdList.size());
+			body.setRegionIdList(regionIdList);
+		}
+		pack.setMsgBody(body);
+		return pack;
+	}
+
+	public byte getRegionCount() {
+		return regionCount;
+	}
+
+	/**区域数*/
+	public void setRegionCount(byte regionCount) {
+		this.regionCount = regionCount;
+	}
+
+	public List<Integer> getRegionIdList() {
+		return regionIdList;
+	}
+	
+	/**区域id列*/
+	public void setRegionIdList(List<Integer> regionIdList) {
+		this.regionIdList = regionIdList;
+	}
+
+}
